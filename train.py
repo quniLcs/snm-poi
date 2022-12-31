@@ -98,6 +98,6 @@ if __name__ == '__main__':
     
     runner = trainer(load_wv=True, save_wv=False)
     user_wv = runner.user_wv
-    plot_kmeans_tsne(user_wv, n_clusters=5)
-    _, label_result = kmeans(user_wv, n_clusters=5)
-    import pdb; pdb.set_trace()
+    # plot_kmeans_tsne(user_wv, n_clusters=5)
+    # plot_kmeans_inertia(user_wv, k_range=[2, 10])
+    plot_kmeans_silhouette_score(user_wv, k_range=[2, 10])

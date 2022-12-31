@@ -1,6 +1,17 @@
 import numpy as np
+from datetime import datetime
 import sklearn.cluster
 import sklearn.manifold
+from sklearn.metrics import silhouette_score
+
+def str2date(utcTimestamp):
+    
+    time_data = utcTimestamp.split(' ')
+    year, month, day, time = time_data[-1], time_data[1], time_data[2], time_data[3]
+    hour, minute, second = time.split(':')
+    
+    return datetime(year, month, day, hour, minute, second)
+
 
 def kmeans(wv,
            n_clusters):
@@ -20,13 +31,15 @@ def kmeans(wv,
     kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters).fit(X)
     
     labels =  kmeans.labels_
+    inertia = kmeans.inertia_
+    sil_score = silhouette_score(X, labels)
     label_dict = {}                                                        # label_dict[userId] = label
     label_result = {label: [] for label in range(n_clusters)}              # label_result[label] = users
     for idx in range(n_recs):
         label_dict[idx2key[idx]] = labels[idx]
         label_result[labels[idx]].append(idx2key[idx])
         
-    return label_dict, label_result
+    return label_dict, label_result, inertia, sil_score
 
 
 def tsne(wv,
