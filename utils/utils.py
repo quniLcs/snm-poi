@@ -9,22 +9,24 @@ def kmeans(wv,
         wv: A dict. dict[userId/venueId] = vec.
         n_clusters: The number of clusters.
     Returns:
-        label: A dict, recording the labels.
+        labels result.
     '''
     
     key2idx = {key: idx for idx, key in enumerate(wv.keys())}
     idx2key = {idx: key for idx, key in enumerate(wv.keys())}
     n_recs = len(wv.keys())
     
-    X = np.stack([wv[idx2key[idx]] for idx in range(n_recs)], axis=0)    # [N, k]. k is the size of vec.
+    X = np.stack([wv[idx2key[idx]] for idx in range(n_recs)], axis=0)      # [N, k]. k is the size of vec.
     kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters).fit(X)
     
     labels =  kmeans.labels_
-    label_dict = {}
+    label_dict = {}                                                        # label_dict[userId] = label
+    label_result = {label: [] for label in range(n_clusters)}              # label_result[label] = users
     for idx in range(n_recs):
         label_dict[idx2key[idx]] = labels[idx]
+        label_result[labels[idx]].append(idx2key[idx])
         
-    return label_dict
+    return label_dict, label_result
 
 
 def tsne(wv,

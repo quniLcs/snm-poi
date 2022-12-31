@@ -12,7 +12,7 @@ def plot_kmeans_tsne(wv,
         n_clusters: The number of clusters.
     '''
     
-    label_dict = kmeans(wv, n_clusters)
+    label_dict, _ = kmeans(wv, n_clusters)
     embedded_dict = tsne(wv)
     
     X, Y, labels = [], [], []
