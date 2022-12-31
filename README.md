@@ -40,4 +40,4 @@
 
 1. [图深度学习](https://blog.csdn.net/qq_34539676/article/details/125608802)
 2. [DeepWalk](https://zhuanlan.zhihu.com/p/56380812), [LINE](https://zhuanlan.zhihu.com/p/56478167) 含代码
-3. [POI可视化](https://zhuanlan.zhihu.com/p/138781456)
+3. [POI可视化](https://zhuanlan.zhihu.com/p/165095864)
