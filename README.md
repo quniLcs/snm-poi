@@ -41,3 +41,13 @@
 1. [图深度学习](https://blog.csdn.net/qq_34539676/article/details/125608802)
 2. [DeepWalk](https://zhuanlan.zhihu.com/p/56380812), [LINE](https://zhuanlan.zhihu.com/p/56478167) 含代码
 3. [POI可视化](https://zhuanlan.zhihu.com/p/165095864)
+
+Git使用：
+
+- 拉取代码：`git pull origin master`
+- 推送代码：
+  - 先加到缓存：`git add emb2coord.py`
+  - 可查看状态：`git status -s`
+  - 再加到仓库：`git commit -m 'Add emb2coord'`
+  - 或一步到位：`git commit -am 'Add emb2coord'`
+  - 最后：`git push origin master`
