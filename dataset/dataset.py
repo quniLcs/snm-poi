@@ -62,7 +62,7 @@ class FourSquare():
         
         print("Get trajectories!")
         
-        for rec in tqdm(raw_data, leave=False):
+        for rec in tqdm(raw_data, leave=False, ncols=80):
             
             userId, venueId, timezoneOffset, utcTimestamp = rec[0], rec[1], rec[6], rec[7]
             venue_data = rec[2:6]
@@ -132,7 +132,7 @@ class FourSquare():
         
         trajs = []
         
-        for traj_idx in tqdm(range(n_trajs)):
+        for traj_idx in tqdm(range(n_trajs), ncols=80):
             
             traj = []
             p = random.random()

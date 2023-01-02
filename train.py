@@ -97,24 +97,25 @@ class trainer():
 
 if __name__ == '__main__':
     
-    runner = trainer(load_wv=False, save_wv=True)
+    runner = trainer(load_wv=True, save_wv=False)
     user_wv = runner.user_wv
     # plot_kmeans_tsne(user_wv, n_clusters=5)
     # plot_kmeans_inertia(user_wv, k_range=[2, 10])
     # plot_kmeans_silhouette_score(user_wv, k_range=[2, 10])
     
-    label_dict, label_result, _, _ = kmeans(user_wv, 4)
+    n_clusters = 6
+    label_dict, label_result, _, _ = kmeans(user_wv, n_clusters)
     # label_dict, label_result = spectral_clustering(user_wv, 4)
     
     date_interval = [datetime(2012, 4, 15, 0, 0, 0), datetime(2012, 7, 15, 0, 0, 0)]
-    for label in range(4):
+    for label in range(n_clusters):
         user_id_list = label_result[label]
         plot_users_visit(user_id_list,
                          runner.dataset,
-                         save_path="./visualize/vis_%d.html" % label,
+                         save_path="./visualize/poi_vis/vis_%d.html" % label,
                          date_interval=date_interval,
                          animation=None)
         stat_for_venue_category(user_id_list,
                                 runner.dataset,
-                                save_path="./visualize/bar_%d.png" % label,
+                                save_path="./visualize/stat_bar/bar_%d.png" % label,
                                 top_k=20)

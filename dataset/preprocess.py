@@ -28,7 +28,7 @@ def compute_topk_venue_dict(data_root,
     batch = 100
     part_num = n_venue // batch
     total_idx_list = list(range(n_venue))
-    for part_idx in tqdm(range(part_num)):
+    for part_idx in tqdm(range(part_num), ncols=80):
         idx_list = total_idx_list[part_idx*batch : (part_idx+1)*batch]
         if part_idx == (part_num - 1): idx_list = total_idx_list[part_idx*batch : ]
         X = pos_array[idx_list, :]      # [k, 2]
@@ -90,7 +90,7 @@ def compute_topk_user_dict(data_root,
     traj_dict = {key: np.array([venue_id2idx[_] for _ in traj_dict[key][0]]) for key in user_id_list}
     
     topk_close_user_dict = {}
-    for userId_i in tqdm(user_id_list):
+    for userId_i in tqdm(user_id_list, ncols=80):
         temp = []
         for userId_j in user_id_list:
             traj_i, traj_j = traj_dict[userId_i], traj_dict[userId_j]
