@@ -10,16 +10,6 @@ from dataset import EmbeddingAndCoordinate
 from model import EmbeddingToCoordinate
 
 
-def load(mode, batch_size, num_workers, shuffle):
-    dataset = EmbeddingAndCoordinate(mode = mode)
-    print('Loaded %d %ss' % (len(dataset), mode))
-
-    dataloader = DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, shuffle = shuffle)
-    print('With batch size %3d, %4d iterations per epoch\n' % (batch_size, len(dataloader)))
-
-    return dataloader
-
-
 def build(device):
     model = EmbeddingToCoordinate()
     model.to(device)
@@ -31,6 +21,16 @@ def build(device):
     print('Number of parameter: %d\n' % parameter_num)
 
     return model
+
+
+def load(mode, batch_size, num_workers, shuffle):
+    dataset = EmbeddingAndCoordinate(mode = mode)
+    print('Loaded %d %ss' % (len(dataset), mode))
+
+    dataloader = DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, shuffle = shuffle)
+    print('With batch size %3d, %4d iterations per epoch\n' % (batch_size, len(dataloader)))
+
+    return dataloader
 
 
 def adjustlr(baselr, gamma, index, iteration, batch, warmup, milestone):
@@ -79,7 +79,7 @@ def train(model, optimizer, criterion, trainloader,
         losses = np.array(losses)
         loss = np.mean(losses)
 
-        print('Epoch: %2d\t\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
+        print('Epoch: %2d\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
         print('Example target: (%f, %f)'   % (targets[0][0], targets[0][1]))
         print('Example output: (%f, %f)\n' % (outputs[0][0], outputs[0][1]))
         torch.save(model, os.path.join(savedir, 'emb2coord_ep%d' % (index + 1)))
@@ -117,9 +117,9 @@ if __name__ == '__main__':
 
     baselr = 0.001
     gamma = 0.1
+    epoch = 1000
     warmup = 1
     milestone = (900,)
-    epoch = 1000
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     torch.manual_seed(seed)
