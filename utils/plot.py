@@ -1,3 +1,4 @@
+import os
 import plotly.express as px
 import numpy as np
 import matplotlib.pyplot as plt
@@ -67,7 +68,8 @@ def plot_kmeans_silhouette_score(wv,
     
 def plot_users_visit(user_id_list,
                      dataset,
-                     save_path,
+                     save_dir,
+                     save_name,
                      date_interval=None,
                      animation=None):
     '''
@@ -99,17 +101,20 @@ def plot_users_visit(user_id_list,
                             lon='lon', lat='lat',
                             radius=3,
                             animation_frame=animation,
-                            center={'lat': 35.67, 'lon': 139.71})
+                            center={'lat': 35.67, 'lon': 139.71},
+                            zoom=9)
     fig.update_geos(lataxis_showgrid=True, lonaxis_showgrid=True)
     fig.update_layout(mapbox_style="stamen-terrain")   
     
     # fig.show() 
-    fig.write_html(save_path)
+    fig.write_html(os.path.join(save_dir, "%s.html" % save_name))
+    fig.write_image(os.path.join(save_dir, "%s.png" % save_name), scale=2)
     
 
 def stat_for_venue_category(user_id_list,
                             dataset,
-                            save_path,
+                            save_dir,
+                            save_name,
                             top_k=20):
     '''
     Stat for users' venue categories.
@@ -141,4 +146,4 @@ def stat_for_venue_category(user_id_list,
                  "freq": [stat_dict[venue_category] for venue_category in venue_category_list]}
     fig = px.bar(data_dict, x='venue_category', y='freq')
     
-    fig.write_image(save_path)
+    fig.write_image(os.path.join(save_dir, "%s.png" % save_name))

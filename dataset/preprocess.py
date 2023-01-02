@@ -11,7 +11,7 @@ def compute_topk_venue_dict(data_root,
                             type="TKY",
                             top_k=10):
     
-    dataset = FourSquare(data_root, type)
+    dataset = FourSquare(data_root, type, load_geo=False, load_usr=False)
     
     venue_dict = dataset.venue_dict
     venue_id_list = dataset.venue_id_list

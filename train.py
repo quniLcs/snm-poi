@@ -112,10 +112,12 @@ if __name__ == '__main__':
         user_id_list = label_result[label]
         plot_users_visit(user_id_list,
                          runner.dataset,
-                         save_path="./visualize/poi_vis/vis_%d.html" % label,
+                         save_dir="./visualize/poi_vis/",
+                         save_name="vis_%d" % label,
                          date_interval=date_interval,
                          animation=None)
         stat_for_venue_category(user_id_list,
                                 runner.dataset,
-                                save_path="./visualize/stat_bar/bar_%d.png" % label,
+                                save_dir="./visualize/stat_bar/",
+                                save_name="bar_%d" % label,
                                 top_k=20)

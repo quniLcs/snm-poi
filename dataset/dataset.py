@@ -14,6 +14,7 @@ import random
 import numpy as np
 import multiprocessing
 from tqdm import tqdm
+from copy import deepcopy
 
 class FourSquare():
     
@@ -58,23 +59,42 @@ class FourSquare():
         # We get trajectories for users and POIs.
         traj_dict = {userId: [[], []] for userId in user_id_list}             # First list record id, second for timestamp.
         venue_dict = {venueId: None for venueId in venue_id_list}
-        visited_dict = {venueId: [[], []] for venueId in venue_id_list}
+        visited_dict = {venueId: [[], []] for venueId in venue_id_list}       # First list record id, second for timestamp.
+        last_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.
         
         print("Get trajectories!")
+        
+        for rec in raw_data:
+            
+            userId, venueId, timezoneOffset, utcTimestamp = rec[0], rec[1], rec[6], rec[7]
+            
+            last_traj_dict[userId][0].append(venueId)
+            last_traj_dict[userId][1].append(utcTimestamp)
+            
+        assert min([len(_[0]) for _ in last_traj_dict.values()]) > 3
+        
+        last_traj_dict = {k: [v[0][-3:], v[1][-3:]] for k, v in last_traj_dict.items()}
         
         for rec in tqdm(raw_data, leave=False, ncols=80):
             
             userId, venueId, timezoneOffset, utcTimestamp = rec[0], rec[1], rec[6], rec[7]
             venue_data = rec[2:6]
             
+            if venue_dict[venueId] is None:
+                venue_dict[venueId] = venue_data
+                        
+            last_traj = last_traj_dict[userId]
+            if (venueId, utcTimestamp) in zip(last_traj[0], last_traj[1]):
+                # That means test set.
+                continue
+            
             traj_dict[userId][0].append(venueId)
             traj_dict[userId][1].append(utcTimestamp)
             visited_dict[venueId][0].append(userId)
             visited_dict[venueId][1].append(utcTimestamp)
             
-            if venue_dict[venueId] is None:
-                venue_dict[venueId] = venue_data
-            
+        
+        self.last_traj_dict = last_traj_dict
         self.traj_dict = traj_dict
         self.visited_dict = visited_dict
         self.venue_dict = venue_dict
