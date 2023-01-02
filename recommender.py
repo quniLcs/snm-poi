@@ -39,7 +39,10 @@ def prepareUserToTrajectory():
 
     index2trajectory = dict()
     for user, trajectory in user2trajectory.items():
-        index2trajectory[user2index[user]] = ([venue2index[venue] for venue in trajectory[0]], trajectory[1])
+        index2trajectory[user2index[user]] = (
+            torch.tensor([venue2index[venue] for venue in trajectory[0]]),
+            torch.tensor([str2date(time) for time in trajectory[1]])
+        )
 
     with open('data/Foursquare_TKY_user_tr_i.pkl', 'wb') as file:
         pickle.dump(index2trajectory, file)
@@ -72,16 +75,15 @@ class TimeToEmbedding(nn.Module):
         )
 
     def forward(self, time):
-        date = str2date(time)
         inputs = [
-            date.year - 2012,
-            date.month / 12,
-            date.day / 30,
-            date.weekday() / 7,
-            date.hour / 24,
-            date.minute / 60,
-            date.second / 60,
-            date.microsecond / 1000
+            time.year - 2012,
+            time.month / 12,
+            time.day / 30,
+            time.weekday() / 7,
+            time.hour / 24,
+            time.minute / 60,
+            time.second / 60,
+            time.microsecond / 1000
         ]
         return self.linear(inputs)
 
@@ -157,7 +159,7 @@ def train(model, optimizer, criterion, dataloader,
         test_count    = 0
 
         for iteration, (user, (venue, time)) in tqdm(enumerate(dataloader)):
-            curlr = adjustlr(baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
+            curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
 
             user = user.to(device)
             venue = venue.to(device)
@@ -182,7 +184,7 @@ def train(model, optimizer, criterion, dataloader,
 if __name__ == '__main__':
     seed = 123
 
-    batch_size = 128
+    batch_size = 1
     num_workers = 4
 
     baselr = 0.001

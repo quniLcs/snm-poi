@@ -33,7 +33,7 @@ def load(mode, batch_size, num_workers, shuffle):
     return dataloader
 
 
-def adjustlr(baselr, gamma, index, iteration, batch, warmup, milestone):
+def adjustlr(optimizer, baselr, gamma, index, iteration, batch, warmup, milestone):
     if index < warmup:
         curlr = iteration / (batch * warmup) * baselr
     else:
@@ -61,7 +61,7 @@ def train(model, optimizer, criterion, trainloader,
         # print('Epoch: %2d' % (index + 1))
 
         for iteration, (nodeid, (inputs, targets)) in tqdm(enumerate(trainloader)):
-            curlr = adjustlr(baselr, gamma, index, iteration, len(trainloader), warmup, milestone)
+            curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(trainloader), warmup, milestone)
 
             inputs = inputs.to(device)
             targets = targets.to(device).to(torch.float)
