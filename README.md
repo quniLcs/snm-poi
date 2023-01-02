@@ -44,10 +44,10 @@
 
 Git使用：
 
-- 拉取代码：`git pull origin master`
+- 拉取代码：`git pull origin main`
 - 推送代码：
   - 先加到缓存：`git add emb2coord.py`
   - 可查看状态：`git status -s`
   - 再加到仓库：`git commit -m 'Add emb2coord'`
   - 或一步到位：`git commit -am 'Add emb2coord'`
-  - 最后：`git push origin master`
+  - 最后：`git push origin main`

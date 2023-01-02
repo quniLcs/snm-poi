@@ -15,7 +15,8 @@ def prepareVenueToCoordinate():
     store all the latitudes and longitudes and compute the mean for later usage.
     This function will be called only once.
     """
-    dataset = np.loadtxt('data/Foursquare/dataset_TSMC2014_TKY.csv', delimiter = ',', skiprows = 1, dtype = str)
+    dataset = np.loadtxt('data/Foursquare/dataset_TSMC2014_TKY.csv',
+                         delimiter = ',', skiprows = 1, dtype = str)
     coordinate_all = defaultdict(list)
     coordinate = dict()
 
@@ -66,19 +67,20 @@ class EmbeddingAndCoordinate(Dataset):
         else:  # mode == 'user'
             coordinate = None
 
-        self.nodeid = list(embedding.keys())[:128]
+        self.nodeid = list(embedding.keys())
         self.dataset = dict()
         for nodeid in self.nodeid:
             if mode == 'venue':
                 self.dataset[nodeid] = (embedding[nodeid], coordinate[nodeid])
             else:  # mode == 'user'
-                self.dataset[nodeid] = (embedding[nodeid], None)
+                self.dataset[nodeid] = (embedding[nodeid], np.array([0, 0]))
 
     def __len__(self):
         return len(self.nodeid)
 
     def __getitem__(self, index):
-        return self.dataset[self.nodeid[index]]
+        nodeid = self.nodeid[index]
+        return nodeid, self.dataset[nodeid]
 
 
 class ResBlock(nn.Module):
@@ -98,12 +100,12 @@ class ResBlock(nn.Module):
 
 
 class EmbeddingToCoordinate(nn.Module):
-    def __init__(self, vector_size = 8, hidden_size = 32, output_size = 2):
+    def __init__(self, vector_size = 64, hidden_size = 512, output_size = 2):
         super().__init__()
         self.resblock1 = ResBlock(vector_size, hidden_size)
         self.resblock2 = ResBlock(vector_size, hidden_size)
         self.resblock3 = ResBlock(vector_size, hidden_size)
-        self.resblock4 = ResBlock(vector_size, hidden_size)  # 2546
+        self.resblock4 = ResBlock(vector_size, hidden_size)  # 269186
         self.linear = nn.Linear(vector_size, output_size)
 
     def forward(self, inputs):
@@ -164,7 +166,7 @@ def train(model, optimizer, criterion, trainloader,
         losses = []
         # print('Epoch: %2d' % (index + 1))
 
-        for iteration, (inputs, targets) in tqdm(enumerate(trainloader)):
+        for iteration, (nodeid, (inputs, targets)) in tqdm(enumerate(trainloader)):
             curlr = adjustlr(baselr, gamma, index, iteration, len(trainloader), warmup, milestone)
 
             inputs = inputs.to(device)
@@ -186,7 +188,31 @@ def train(model, optimizer, criterion, trainloader,
         print('Epoch: %2d\t\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
         print('Example target: (%f, %f)'   % (targets[0][0], targets[0][1]))
         print('Example output: (%f, %f)\n' % (outputs[0][0], outputs[0][1]))
-        torch.save(model, os.path.join(savedir, 'emb2coord_ep%2d' % (index + 1)))
+        torch.save(model, os.path.join(savedir, 'emb2coord_ep%d' % (index + 1)))
+
+
+def test(model, testloader, device):
+    epoch = 1000
+    savedir = 'visualize'
+    model = torch.load(os.path.join(savedir, 'emb2coord_ep%d' % epoch))
+    model.eval()
+
+    coordinate = list()
+    coordinate_mean = torch.tensor([35.67766454, 139.7094122])
+    coordinate_std = torch.tensor([0.06014593, 0.07728908])
+
+    for iteration, (nodeid, (inputs, targets)) in tqdm(enumerate(testloader)):
+        inputs = inputs.to(device)
+        with torch.no_grad():
+            outputs = model(inputs).to('cpu')
+
+        outputs *= coordinate_std
+        outputs += coordinate_mean
+        coordinate.append((nodeid[0], str(float(outputs[0][0])), str(float(outputs[0][1]))))
+
+    coordinate = np.array(coordinate)
+    np.savetxt('data/Foursquare_TKY_user_xy.csv', coordinate,
+               fmt = '%s', delimiter = ',', header = 'userId,latitude,longitude')
 
 
 if __name__ == '__main__':
@@ -195,7 +221,7 @@ if __name__ == '__main__':
     batch_size = 128
     num_workers = 4
 
-    baselr = 0.1
+    baselr = 0.001
     gamma = 0.1
     warmup = 1
     milestone = (900,)
@@ -215,4 +241,5 @@ if __name__ == '__main__':
     trainloader = load('venue', batch_size = batch_size, num_workers = num_workers, shuffle = True)
     testloader  = load('user',  batch_size = 1,          num_workers = num_workers, shuffle = False)
 
-    train(model, optimizer, criterion, trainloader, baselr, gamma, epoch, warmup, milestone, device)
+    # train(model, optimizer, criterion, trainloader, baselr, gamma, epoch, warmup, milestone, device)
+    test(model, testloader, device)
