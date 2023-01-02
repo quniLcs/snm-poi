@@ -13,3 +13,8 @@ def str2date(utcTimestamp):
     hour, minute, second = time.split(':')
     
     return datetime(int(year), month_str_to_month_num[month], int(day), int(hour), int(minute), int(second))
+
+
+if __name__ == '__main__':
+    date = str2date('Tue Apr 03 18:17:18 +0000 2012')
+    print(date)
