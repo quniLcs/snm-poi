@@ -1,10 +1,44 @@
 import pickle
 
-import torch
+import numpy as np
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 from utils.data_cvt import str2date
+
+
+def prepareNodeToEmbedding(mode):
+    assert mode in ('venue', 'user')
+    with open('data/Foursquare_TKY_%s_wv.pkl' % mode, 'rb') as file:
+        node2embedding = pickle.load(file)
+
+    node2index = dict()
+    embeddings = list()
+    for index, (node, embedding) in enumerate(node2embedding.items()):
+        node2index[node] = index
+        embeddings.append(embedding)
+    embeddings = np.stack(embeddings)
+
+    with open('data/Foursquare_TKY_%s_ii.pkl' % mode, 'wb') as file:
+        pickle.dump(node2index, file)
+    with open('data/Foursquare_TKY_%s_em.pkl' % mode, 'wb') as file:
+        pickle.dump(embeddings, file)
+
+
+def prepareUserToTrajectory():
+    with open('data/Foursquare_TKY_user_tr.pkl',  'rb') as file:
+        user2trajectory = pickle.load(file)
+    with open('data/Foursquare_TKY_venue_ii.pkl', 'rb') as file:
+        venue2index = pickle.load(file)
+    with open('data/Foursquare_TKY_user_ii.pkl',  'rb') as file:
+        user2index  = pickle.load(file)
+
+    index2trajectory = dict()
+    for user, trajectory in user2trajectory.items():
+        index2trajectory[user2index[user]] = ([venue2index[venue] for venue in trajectory[0]], trajectory[1])
+
+    with open('data/Foursquare_TKY_user_tr_i.pkl', 'wb') as file:
+        pickle.dump(index2trajectory, file)
 
 
 class Trajectory(Dataset):
@@ -13,7 +47,7 @@ class Trajectory(Dataset):
         # with open('data/Foursquare_TKY_user_tr.pkl', 'wb') as file:
         #     pickle.dump(last_traj_dict, file)
 
-        with open('data/Foursquare_TKY_user_tr.pkl', 'rb') as file:
+        with open('data/Foursquare_TKY_user_tr_i.pkl', 'rb') as file:
             self.dataset = pickle.load(file)
 
     def __len__(self):
@@ -52,22 +86,21 @@ class Recommender(nn.Module):
     def __init__(self, vector_size = 64):
         super().__init__()
         with open('data/Foursquare_TKY_venue_wv.pkl', 'rb') as file:
-            self.venue_embedding = pickle.load(file)
+            self.venue2embedding = pickle.load(file)
         with open('data/Foursquare_TKY_user_wv.pkl',  'rb') as file:
-            self.user_embedding  = pickle.load(file)
+            self.user2embedding  = pickle.load(file)
 
-        self.input2hidden = nn.Linear(vector_size * 2, vector_size)
+        self.rnn = nn.RNN(vector_size, vector_size)
         self.softmax = nn.Softmax(dim = 1)
 
     def forward(self, venue, time, hiddens):
-        venue_embedding = self.venue_embedding[venue]
+        venue_embedding = self.venue2embedding[venue]
         time_embedding = self.time_embedding(time)
 
         inputs = venue_embedding + time_embedding
-        combined = torch.cat((inputs, hiddens), dim = 1)
-        hiddens = self.input2hidden(combined)
-        output = self.softmax(output)
-        return output, hiddens
+        hiddens = self.RNN(inputs, hiddens)
+        outputs = self.softmax(outputs)
+        return outputs, hiddens
 
 
 def load(batch_size, num_workers, shuffle):
@@ -84,4 +117,7 @@ if __name__ == '__main__':
     batch_size = 128
     num_workers = 4
 
+    # prepareNodeToEmbedding(mode = 'venue')
+    # prepareNodeToEmbedding(mode = 'user')
+    # prepareUserToTrajectory()
     dataloader = load(batch_size, num_workers, shuffle = True)
