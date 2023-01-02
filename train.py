@@ -45,16 +45,15 @@ class trainer():
         
         
     def _train_GNN(self,
-                   n_trajs=100000,
-                   length=1000):
+                   length=1500):
         '''
         Train GCN using deepwalk.
         Args:
             n_trajs: The number of simulated trajs.
             length: The length of each traj.
         '''
-        trajs = self.dataset.simulate(n_trajs, length)
-        self.GNN = Word2Vec(trajs, vector_size=64, workers=16)
+        trajs = self.dataset.simulate(length)
+        self.GNN = Word2Vec(trajs, vector_size=64, workers=16, min_count=0, sg=1)
         
         self.user_wv = {userId: self.GNN.wv[userId] for userId in self.dataset.user_id_list}
         self.venue_wv = {venueId: self.GNN.wv[venueId] for venueId in self.dataset.venue_id_list}
@@ -97,7 +96,7 @@ class trainer():
 
 if __name__ == '__main__':
     
-    runner = trainer(load_wv=True, save_wv=False)
+    runner = trainer(load_wv=False, save_wv=True)
     user_wv = runner.user_wv
     # plot_kmeans_tsne(user_wv, n_clusters=5)
     # plot_kmeans_inertia(user_wv, k_range=[2, 10])

@@ -7,6 +7,12 @@
 #       latitude, longitude -> float
 #       timezoneOffset -> int 
 #       utcTimestamp -> str
+#   BrightKite:
+#       userId -> str
+#       utcTimestamp -> str
+#       latitude -> str
+#       longtitude -> str
+#       venueId -> str
 
 import os
 import pickle
@@ -86,6 +92,7 @@ class FourSquare():
             last_traj = last_traj_dict[userId]
             if (venueId, utcTimestamp) in zip(last_traj[0], last_traj[1]):
                 # That means test set.
+                # pass
                 continue
             
             traj_dict[userId][0].append(venueId)
@@ -99,8 +106,8 @@ class FourSquare():
         self.visited_dict = visited_dict
         self.venue_dict = venue_dict
         
-        self.n_users = len(traj_dict)
-        self.n_venues = len(venue_dict)
+        self.n_users = len(user_id_list)
+        self.n_venues = len(venue_id_list)
         
         print("Number of users: %d; Number of venues: %d" % (self.n_users, self.n_venues))
         
@@ -113,11 +120,12 @@ class FourSquare():
         if load_usr:
             load_path = os.path.join(root, "Foursquare_%s_topk_close_user.pkl" % (self.city))
             with open(load_path, "rb") as f:
-                self.top_k_user_dict = pickle.load(f)            
+                self.top_k_user_dict = pickle.load(f)   
+                
+        test = [len(_[0]) for _ in visited_dict.values()]
         
          
     def simulate(self,
-                 n_trajs=10000,
                  length=100,
                  workers=16):
         '''
@@ -132,32 +140,30 @@ class FourSquare():
             
             if node_category == "user":
                 p = random.random()
-                if p < .5:
+                if p < .5 and len(self.traj_dict[node][0]) != 0:
+                    next_node = random.choice(self.traj_dict[node][0])
+                    next_category = "venue"                    
+                else:
                     next_node = random.choice(self.top_k_user_dict[node])[0]
                     next_category = "user"
-                else:
-                    next_node = random.choice(self.traj_dict[node][0])
-                    next_category = "venue"
             else:
                 p = random.random()
-                if p < .5:
-                    next_node = random.choice(self.top_k_venue_dict[node])
-                    next_category = "venue"
-                else:
+                if p < .5 and len(self.visited_dict[node][0]) != 0:
                     next_node = random.choice(self.visited_dict[node][0])
                     next_category = "user"
+                else:
+                    next_node = random.choice(self.top_k_venue_dict[node])
+                    next_category = "venue"                    
             
             return next_node, next_category
         
         
         trajs = []
         
-        for traj_idx in tqdm(range(n_trajs), ncols=80):
+        for node in tqdm(self.user_id_list, ncols=80):
             
             traj = []
-            p = random.random()
-            node = random.choice(self.user_id_list) if p < .5 else random.choice(self.venue_id_list)
-            node_category = "user" if p < .5 else "venue"
+            node_category = "user"
             
             traj.append(node)
             
@@ -167,15 +173,62 @@ class FourSquare():
                 traj.append(node)
             
             trajs.append(traj)
+            
+        for node in tqdm(self.venue_id_list, ncols=80):
+            
+            traj = []
+            node_category = "venue"
+            
+            traj.append(node)
+            
+            for _ in range(length-1):
+                
+                node, node_category = step(node, node_category)
+                traj.append(node)
+            
+            trajs.append(traj)                
+                
                 
         return trajs
-            
+    
+    
+class BrightKite():
+    
+    def __init__(self, 
+                 root="../data",
+                 debug=False,
+                 load_geo=True):
+        '''
+        Args: The same as FourSquare.
+        '''
         
-
+        rec_data_path = os.path.join(root, "Brightkite", "Brightkite_totalCheckins.txt")
+        usr_data_path = os.path.join(root, "Brightkite", "Brightkite_edges.txt")
+        
+        # Read data.
+        print("Loading...")
+        with open(rec_data_path, "r") as f:
+            raw_rec_lines = f.readlines()
+            # one_rec: "0	2010-10-17T01:48:53Z	39.747652	-104.99251	88c46bf20db295831bd2d1718ad7e6f5\n"
+            raw_recs = [one_rec[:-1].split() for one_rec in raw_rec_lines]
+            raw_recs = np.array(raw_recs, dtype=object)
+        
+        with open(usr_data_path, "r") as f:
+            raw_usr_lines = f.readlines()
+            # one_usr: "0	1\n"
+            raw_usrs = [one_usr[:-1].split() for one_usr in raw_usr_lines]
+            raw_usrs = np.array(raw_usrs, dtype=object)
+        
+        self.raw_recs = raw_recs
+        self.raw_usrs = raw_usrs
+        
+        import pdb; pdb.set_trace()
+        
 
 if __name__ == '__main__':
     
     data_root = "../data"
-    dataset = FourSquare(data_root, debug=False)
-    trajs = dataset.simulate(n_trajs=100, length=100)
+    # dataset = FourSquare(data_root, debug=False)
+    # trajs = dataset.simulate(n_trajs=100, length=100)
+    dataset = BrightKite(data_root)
     import pdb; pdb.set_trace()
