@@ -71,7 +71,8 @@ def plot_users_visit(user_id_list,
                      save_dir,
                      save_name,
                      date_interval=None,
-                     animation=None):
+                     animation=None,
+                     dataset_type="Foursquare"):
     '''
     Plot the places visited by selected users.
     Args:
@@ -90,7 +91,7 @@ def plot_users_visit(user_id_list,
         
         for venueId, timestamp in zip(traj, timestamps):
             
-            date = str2date(timestamp)
+            date = str2date(timestamp) if dataset_type == "Foursquare" else str2date_Bk(timestamp)
             if date_interval is None or (date > date_interval[0] and date < date_interval[1]):
                 venue_data = dataset.venue_dict[venueId]
                 rec_dict['lat'].append(float(venue_data[-2]))
@@ -101,7 +102,6 @@ def plot_users_visit(user_id_list,
                             lon='lon', lat='lat',
                             radius=3,
                             animation_frame=animation,
-                            center={'lat': 35.67, 'lon': 139.71},
                             zoom=9)
     fig.update_geos(lataxis_showgrid=True, lonaxis_showgrid=True)
     fig.update_layout(mapbox_style="stamen-terrain")   

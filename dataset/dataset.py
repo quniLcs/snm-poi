@@ -202,27 +202,164 @@ class BrightKite():
         Args: The same as FourSquare.
         '''
         
-        rec_data_path = os.path.join(root, "Brightkite", "Brightkite_totalCheckins.txt")
-        usr_data_path = os.path.join(root, "Brightkite", "Brightkite_edges.txt")
+        rec_data_path = os.path.join(root, "Brightkite", "Brightkite_filtered_Checkins.txt")
+        edge_data_path = os.path.join(root, "Brightkite", "Brightkite_filtered_edges.txt")
         
-        # Read data.
         print("Loading...")
-        with open(rec_data_path, "r") as f:
-            raw_rec_lines = f.readlines()
-            # one_rec: "0	2010-10-17T01:48:53Z	39.747652	-104.99251	88c46bf20db295831bd2d1718ad7e6f5\n"
-            raw_recs = [one_rec[:-1].split() for one_rec in raw_rec_lines]
-            raw_recs = np.array(raw_recs, dtype=object)
-        
-        with open(usr_data_path, "r") as f:
-            raw_usr_lines = f.readlines()
-            # one_usr: "0	1\n"
-            raw_usrs = [one_usr[:-1].split() for one_usr in raw_usr_lines]
-            raw_usrs = np.array(raw_usrs, dtype=object)
+        raw_recs = np.loadtxt(rec_data_path, dtype=str, max_rows=1000 if debug else None)
+        raw_edges = np.loadtxt(edge_data_path, dtype=str, max_rows=1000 if debug else None)
+        print("End loading!")
         
         self.raw_recs = raw_recs
-        self.raw_usrs = raw_usrs
+        self.raw_edges = raw_edges
         
-        import pdb; pdb.set_trace()
+        # Get some valid information.
+        user_id_list = sorted(list(set(raw_recs[:, 0].tolist())), key=lambda x: int(x))   
+        venue_id_list = sorted(list(set(raw_recs[:, -1].tolist())))
+        venue_id2idx = {venue_id: idx for idx, venue_id in enumerate(venue_id_list)}
+        idx2venue_id = {idx: venue_id for idx, venue_id in enumerate(venue_id_list)}
+        
+        self.user_id_list = user_id_list
+        self.venue_id2idx = venue_id2idx
+        self.idx2venue_id = idx2venue_id
+        self.venue_id_list = venue_id_list
+        
+        # We get trajectories for users and POIs.
+        traj_dict = {userId: [[], []] for userId in user_id_list}             # First list record id, second for timestamp.
+        venue_dict = {venueId: None for venueId in venue_id_list}
+        visited_dict = {venueId: [[], []] for venueId in venue_id_list}       # First list record id, second for timestamp.
+        last_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.        
+        
+        print("Get trajectories!")
+        
+        for rec in raw_recs:
+            
+            userId, venueId, utcTimestamp = rec[0], rec[-1], rec[1]
+            
+            last_traj_dict[userId][0].append(venueId)
+            last_traj_dict[userId][1].append(utcTimestamp)
+            
+        # assert min([len(_[0]) for _ in last_traj_dict.values()]) > 3
+        
+        last_traj_dict = {k: [v[0][-3:] if len(v[0]) > 5 else [],\
+                              v[1][-3:] if len(v[0]) > 5 else []] for k, v in last_traj_dict.items()}
+        
+        for rec in tqdm(raw_recs, leave=False, ncols=80):
+            
+            userId, venueId, utcTimestamp = rec[0], rec[-1], rec[1]
+            venue_data = rec[2:4]    # lat, lon.
+            
+            if venue_dict[venueId] is None:
+                venue_dict[venueId] = venue_data
+                        
+            last_traj = last_traj_dict[userId]
+            if (venueId, utcTimestamp) in zip(last_traj[0], last_traj[1]):
+                # That means test set.
+                # pass
+                continue
+            
+            traj_dict[userId][0].append(venueId)
+            traj_dict[userId][1].append(utcTimestamp)
+            visited_dict[venueId][0].append(userId)
+            visited_dict[venueId][1].append(utcTimestamp)
+        
+        self.last_traj_dict = last_traj_dict
+        self.traj_dict = traj_dict
+        self.visited_dict = visited_dict
+        self.venue_dict = venue_dict
+        
+        self.n_users = len(user_id_list)
+        self.n_venues = len(venue_id_list)
+        
+        print("Number of users: %d; Number of venues: %d" % (self.n_users, self.n_venues))      
+        
+        # Load the top-k venues.
+        if load_geo:
+            load_path = os.path.join(root, "Brightkite_topk_close_venue.pkl")
+            with open(load_path, "rb") as f:
+                self.top_k_venue_dict = pickle.load(f)    
+        
+        # Process the top-k users.
+        top_k_user_dict = {userId: [] for userId in self.user_id_list}
+        for edge in raw_edges:
+            user_from, user_to = edge
+            top_k_user_dict[user_from].append(user_to)
+        self.top_k_user_dict = top_k_user_dict
+                
+                
+    def simulate(self,
+                 length=100,
+                 workers=16):
+        '''
+        Args:
+            n_trajs: The number of simulated trajs.
+            length: The length of each traj.
+        Returns:
+            A list, containing "n_trajs" lists.
+        '''
+        
+        def step(node, node_category):
+            
+            if node_category == "user":
+                p = random.random()
+                if p < .5 and len(self.traj_dict[node][0]) != 0:
+                    next_node = random.choice(self.traj_dict[node][0])
+                    next_category = "venue"                    
+                else:
+                    if len(self.top_k_user_dict[node]) == 0:
+                        next_node = random.choice(self.traj_dict[node][0])
+                        next_category = "venue"                      
+                    else:   
+                        next_node = random.choice(self.top_k_user_dict[node])
+                        next_category = "user"
+            else:
+                p = random.random()
+                if p < .5 and len(self.visited_dict[node][0]) != 0:
+                    next_node = random.choice(self.visited_dict[node][0])
+                    next_category = "user"
+                else:
+                    if len(self.top_k_venue_dict[node]) == 0:
+                        next_node = random.choice(self.visited_dict[node][0])
+                        next_category = "user"           
+                    else:
+                        next_node = random.choice(self.top_k_venue_dict[node])
+                        next_category = "venue"                                 
+            
+            return next_node, next_category
+        
+        
+        trajs = []
+        
+        for node in tqdm(self.user_id_list, ncols=80):
+            
+            traj = []
+            node_category = "user"
+            
+            traj.append(node)
+            
+            for _ in range(length-1):
+                
+                node, node_category = step(node, node_category)
+                traj.append(node)
+            
+            trajs.append(traj)
+            
+        for node in tqdm(self.venue_id_list, ncols=80):
+            
+            traj = []
+            node_category = "venue"
+            
+            traj.append(node)
+            
+            for _ in range(length-1):
+                
+                node, node_category = step(node, node_category)
+                traj.append(node)
+            
+            trajs.append(traj)                
+                
+                
+        return trajs                        
         
 
 if __name__ == '__main__':
@@ -231,4 +368,4 @@ if __name__ == '__main__':
     # dataset = FourSquare(data_root, debug=False)
     # trajs = dataset.simulate(n_trajs=100, length=100)
     dataset = BrightKite(data_root)
-    import pdb; pdb.set_trace()
+    trajs = dataset.simulate(length=100)
