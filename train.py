@@ -1,6 +1,7 @@
 import os
 import pickle
 import numpy as np
+from datetime import datetime
 
 from dataset import dataset
 from model import *
@@ -53,7 +54,7 @@ class trainer():
             length: The length of each traj.
         '''
         trajs = self.dataset.simulate(n_trajs, length)
-        self.GNN = Word2Vec(trajs, vector_size=8)
+        self.GNN = Word2Vec(trajs, vector_size=64, workers=16)
         
         self.user_wv = {userId: self.GNN.wv[userId] for userId in self.dataset.user_id_list}
         self.venue_wv = {venueId: self.GNN.wv[venueId] for venueId in self.dataset.venue_id_list}
@@ -96,8 +97,24 @@ class trainer():
 
 if __name__ == '__main__':
     
-    runner = trainer(load_wv=True, save_wv=False)
+    runner = trainer(load_wv=False, save_wv=True)
     user_wv = runner.user_wv
     # plot_kmeans_tsne(user_wv, n_clusters=5)
     # plot_kmeans_inertia(user_wv, k_range=[2, 10])
-    plot_kmeans_silhouette_score(user_wv, k_range=[2, 10])
+    # plot_kmeans_silhouette_score(user_wv, k_range=[2, 10])
+    
+    label_dict, label_result, _, _ = kmeans(user_wv, 4)
+    # label_dict, label_result = spectral_clustering(user_wv, 4)
+    
+    date_interval = [datetime(2012, 4, 15, 0, 0, 0), datetime(2012, 7, 15, 0, 0, 0)]
+    for label in range(4):
+        user_id_list = label_result[label]
+        plot_users_visit(user_id_list,
+                         runner.dataset,
+                         save_path="./visualize/vis_%d.html" % label,
+                         date_interval=date_interval,
+                         animation=None)
+        stat_for_venue_category(user_id_list,
+                                runner.dataset,
+                                save_path="./visualize/bar_%d.png" % label,
+                                top_k=20)

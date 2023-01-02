@@ -9,8 +9,10 @@
 #       utcTimestamp -> str
 
 import os
+import pickle
 import random
 import numpy as np
+import multiprocessing
 from tqdm import tqdm
 
 class FourSquare():
@@ -19,7 +21,8 @@ class FourSquare():
                  root="../data",
                  type="TKY",
                  debug=False,
-                 load=False):
+                 load_geo=True,
+                 load_usr=True):
         '''
         Args:
             root: The root of data dir, including dir "Foursquare".
@@ -34,17 +37,23 @@ class FourSquare():
         n_records = raw_data.shape[0]
         
         self.head = head
+        self.city = type
         self.raw_data = raw_data
         self.n_records = n_records
+        self.data_root = root
         
         # Get some valid information.
         user_id_list = sorted(list(set(raw_data[:, 0].tolist())), key=lambda x: int(x))   
         venue_id_list = sorted(list(set(raw_data[:, 1].tolist())))
+        venue_category_list = sorted(list(set(raw_data[:, 3].tolist())))
         venue_id2idx = {venue_id: idx for idx, venue_id in enumerate(venue_id_list)}
+        idx2venue_id = {idx: venue_id for idx, venue_id in enumerate(venue_id_list)}
         
         self.user_id_list = user_id_list
         self.venue_id2idx = venue_id2idx
+        self.idx2venue_id = idx2venue_id
         self.venue_id_list = venue_id_list
+        self.venue_category_list = venue_category_list
         
         # We get trajectories for users and POIs.
         traj_dict = {userId: [[], []] for userId in user_id_list}             # First list record id, second for timestamp.
@@ -53,7 +62,7 @@ class FourSquare():
         
         print("Get trajectories!")
         
-        for rec in tqdm(raw_data):
+        for rec in tqdm(raw_data, leave=False):
             
             userId, venueId, timezoneOffset, utcTimestamp = rec[0], rec[1], rec[6], rec[7]
             venue_data = rec[2:6]
@@ -75,7 +84,18 @@ class FourSquare():
         
         print("Number of users: %d; Number of venues: %d" % (self.n_users, self.n_venues))
         
+        # Load the top-k venues.
+        if load_geo:
+            load_path = os.path.join(root, "Foursquare_%s_topk_close_venue.pkl" % (self.city))
+            with open(load_path, "rb") as f:
+                self.top_k_venue_dict = pickle.load(f)
         
+        if load_usr:
+            load_path = os.path.join(root, "Foursquare_%s_topk_close_user.pkl" % (self.city))
+            with open(load_path, "rb") as f:
+                self.top_k_user_dict = pickle.load(f)            
+        
+         
     def simulate(self,
                  n_trajs=10000,
                  length=100,
@@ -91,11 +111,21 @@ class FourSquare():
         def step(node, node_category):
             
             if node_category == "user":
-                next_node = random.choice(self.traj_dict[node][0])
-                next_category = "venue"
+                p = random.random()
+                if p < .5:
+                    next_node = random.choice(self.top_k_user_dict[node])[0]
+                    next_category = "user"
+                else:
+                    next_node = random.choice(self.traj_dict[node][0])
+                    next_category = "venue"
             else:
-                next_node = random.choice(self.visited_dict[node][0])
-                next_category = "user"
+                p = random.random()
+                if p < .5:
+                    next_node = random.choice(self.top_k_venue_dict[node])
+                    next_category = "venue"
+                else:
+                    next_node = random.choice(self.visited_dict[node][0])
+                    next_category = "user"
             
             return next_node, next_category
         
@@ -126,5 +156,6 @@ class FourSquare():
 if __name__ == '__main__':
     
     data_root = "../data"
-    dataset = FourSquare(data_root)
-    trajs = dataset.simulate(n_trajs=10000, length=1000)
+    dataset = FourSquare(data_root, debug=False)
+    trajs = dataset.simulate(n_trajs=100, length=100)
+    import pdb; pdb.set_trace()
