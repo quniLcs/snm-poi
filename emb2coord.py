@@ -23,8 +23,8 @@ def build(device):
     return model
 
 
-def load(mode, batch_size, num_workers, shuffle):
-    dataset = EmbeddingAndCoordinate(mode = mode)
+def load(name, mode, batch_size, num_workers, shuffle):
+    dataset = EmbeddingAndCoordinate(name, mode)
     print('Loaded %d %ss' % (len(dataset), mode))
 
     dataloader = DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, shuffle = shuffle)
@@ -48,9 +48,9 @@ def adjustlr(optimizer, baselr, gamma, index, iteration, batch, warmup, mileston
     return curlr
 
 
-def train(model, optimizer, criterion, trainloader,
-          baselr, gamma, epoch, warmup, milestone,
-          device, savedir = 'visualize'):
+def train(model, optimizer, criterion, trainloader, dataset,
+          baselr, gamma, epoch, warmup, milestone, device, savedir = 'visualize'):
+    assert dataset in ('Foursquare_TKY', 'Brightkite_x')
     model.train()
 
     if not os.path.exists(savedir):
@@ -82,18 +82,24 @@ def train(model, optimizer, criterion, trainloader,
         print('Epoch: %2d\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
         print('Example target: (%f, %f)'   % (targets[0][0], targets[0][1]))
         print('Example output: (%f, %f)\n' % (outputs[0][0], outputs[0][1]))
-        torch.save(model, os.path.join(savedir, 'emb2coord_ep%d' % (index + 1)))
+        torch.save(model, os.path.join(savedir, '%s_emb2coord_ep%d' % (dataset, index + 1)))
 
 
-def test(model, testloader, device):
+def test(model, testloader, dataset, device):
+    assert dataset in ('Foursquare_TKY', 'Brightkite_x')
+
     # epoch = 1000
     # savedir = 'visualize'
     # model = torch.load(os.path.join(savedir, 'emb2coord_ep%d' % epoch))
     model.eval()
 
     coordinate = list()
-    coordinate_mean = torch.tensor([35.67766454, 139.7094122])
-    coordinate_std = torch.tensor([0.06014593, 0.07728908])
+    if dataset == 'Foursquare_TKY':
+        coordinate_mean = torch.tensor([35.67766454, 139.7094122])
+        coordinate_std = torch.tensor([0.06014593, 0.07728908])
+    else:  # dataset == 'Brightkite_x'
+        coordinate_mean = torch.tensor([39.80630548, -105.04022534])
+        coordinate_std = torch.tensor([0.15993009, 0.1458281])
 
     for iteration, (nodeid, (inputs, targets)) in tqdm(enumerate(testloader)):
         inputs = inputs.to(device)
@@ -105,12 +111,15 @@ def test(model, testloader, device):
         coordinate.append((nodeid[0], str(float(outputs[0][0])), str(float(outputs[0][1]))))
 
     coordinate = np.array(coordinate)
-    np.savetxt('data/Foursquare_TKY_user_xy.csv', coordinate,
+    np.savetxt('data/%s_user_xy.csv' % dataset, coordinate,
                fmt = '%s', delimiter = ',', header = 'userId,latitude,longitude')
 
 
 if __name__ == '__main__':
     seed = 123
+
+    # dataset = 'Foursquare_TKY'
+    dataset = 'Brightkite_x'
 
     batch_size = 128
     num_workers = 4
@@ -131,9 +140,8 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr = baselr)
     criterion = nn.MSELoss()
 
-    # prepareVenueToCoordinate()
-    trainloader = load('venue', batch_size = batch_size, num_workers = num_workers, shuffle = True)
-    testloader  = load('user',  batch_size = 1,          num_workers = num_workers, shuffle = False)
+    trainloader = load(dataset, 'venue', batch_size = batch_size, num_workers = num_workers, shuffle = True)
+    testloader  = load(dataset, 'user',  batch_size = 1,          num_workers = num_workers, shuffle = False)
 
-    train(model, optimizer, criterion, trainloader, baselr, gamma, epoch, warmup, milestone, device)
-    test(model, testloader, device)
+    train(model, optimizer, criterion, trainloader, dataset, baselr, gamma, epoch, warmup, milestone, device)
+    test(model, testloader, dataset, device)
