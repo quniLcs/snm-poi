@@ -7,6 +7,14 @@ from torch.utils.data import Dataset
 from utils.data_cvt import str2date, str2date_Bk
 
 
+def prepareFoursquareYear(year):
+    return year - 2012
+
+
+def prepareBrightkiteYear(year):
+    return (year - 2008) / 2
+
+
 def prepareNodeToEmbedding(dataset, mode):
     assert mode in ('venue', 'user')
     with open('../data/%s_%s_wv.pkl' % (dataset, mode), 'rb') as file:
@@ -25,7 +33,7 @@ def prepareNodeToEmbedding(dataset, mode):
         pickle.dump(embeddings, file)
 
 
-def prepareUserToTrajectory(dataset, time2date):
+def prepareUserToTrajectory(dataset, time2date, prepareYear):
     with open('../data/%s_user_tr.pkl'  % dataset, 'rb') as file:
         user2trajectory = pickle.load(file)
     with open('../data/%s_venue_ii.pkl' % dataset, 'rb') as file:
@@ -42,7 +50,7 @@ def prepareUserToTrajectory(dataset, time2date):
             venues.append(venue2index[venue])
             date = time2date(time)
             dates.append([
-                date.year - 2012,
+                prepareYear(date.year),
                 date.month / 12,
                 date.day / 30,
                 date.weekday() / 7,
@@ -91,6 +99,6 @@ if __name__ == '__main__':
     # prepareNodeToEmbedding('Foursquare_NYC', 'user')
     # prepareNodeToEmbedding('Brightkite_x', 'venue')
     # prepareNodeToEmbedding('Brightkite_x', 'user')
-    prepareUserToTrajectory('Foursquare_TKY', time2date = str2date)
-    prepareUserToTrajectory('Foursquare_NYC', time2date = str2date)
-    prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk)
+    prepareUserToTrajectory('Foursquare_TKY', time2date = str2date, prepareYear = prepareFoursquareYear)
+    prepareUserToTrajectory('Foursquare_NYC', time2date = str2date, prepareYear = prepareFoursquareYear)
+    prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk, prepareYear = prepareBrightkiteYear)
