@@ -113,7 +113,7 @@ class Recommender(nn.Module):
         self.time2embedding = TimeToEmbedding()
 
         self.rnn = nn.RNN(vector_size, vector_size, batch_first = True)
-        self.softmax = nn.Softmax(dim = 1)
+        self.softmax = nn.Softmax(dim = 2)
 
     def forward(self, user, venue, time):
         user_embedding = self.user2embedding(user)
@@ -168,6 +168,9 @@ def train(model, optimizer, criterion, dataloader,
         for iteration, (user, (venue, time)) in tqdm(enumerate(dataloader)):
             curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
 
+            venue = venue[:, :-3]
+            time = time[:, :-3, :]
+
             user = user.to(device)
             venue = venue.to(device)
             time = time.to(device)
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     batch_size = 1
     num_workers = 4
 
-    baselr = 0.01
+    baselr = 0.001
     gamma = 0.1
     epoch = 1000
     warmup = 1
