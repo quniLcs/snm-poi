@@ -46,6 +46,14 @@ class Recommender(nn.Module):
             self.loss = nn.MSELoss()
 
     def forward(self, user, venue, time):
+        length = venue.shape[1]
+        assert length == time.shape[1]
+
+        if length > 5:
+            test = True
+        else:
+            test = False
+
         user_embedding = self.user2embedding(user)
         venue_embedding = self.venue2embedding(venue)
         time_embedding = self.time2embedding(time)
@@ -53,9 +61,14 @@ class Recommender(nn.Module):
         hiddens = torch.unsqueeze(user_embedding, dim = 1)
         inputs = venue_embedding + time_embedding
 
-        outputs, hiddens = self.rnn(inputs[:, :-3, :], hiddens)
-        outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
-        targets = venue[:, 1:-3]
+        if test:
+            outputs, hiddens = self.rnn(inputs[:, :-3, :], hiddens)
+            outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
+            targets = venue[:, 1:-3]
+        else:
+            outputs, hiddens = self.rnn(inputs, hiddens)
+            outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
+            targets = venue[:, 1:]
 
         if self.criterion == 'CrossEntropyLoss':
             outputs = torch.inner(outputs, self.venue_embeddings)
@@ -65,20 +78,27 @@ class Recommender(nn.Module):
             targets = self.venue2embedding(targets)
         loss = self.loss(outputs, targets)
 
-        with torch.no_grad():
-            outputs, _ = self.rnn(inputs[:, -3:, :], hiddens)
-            outputs = torch.cat((hiddens, outputs), dim = 1)
-            outputs = outputs[:, :-1, :] - time_embedding[:, -3:, :]
-            targets = venue[:, -3:]
+        if test:
+            with torch.no_grad():
+                outputs, _ = self.rnn(inputs[:, -3:, :], hiddens)
+                outputs = torch.cat((hiddens, outputs), dim = 1)
+                outputs = outputs[:, :-1, :] - time_embedding[:, -3:, :]
+                targets = venue[:, -3:]
 
-            outputs = torch.inner(outputs, self.venue_embeddings)
-            _, outputs = torch.topk(outputs, k = 20, dim = 2)
-            correct = torch.eq(outputs, targets.unsqueeze(dim = 2))
+                outputs = torch.inner(outputs, self.venue_embeddings)
+                _, outputs = torch.topk(outputs, k = 20, dim = 2)
+                correct = torch.eq(outputs, targets.unsqueeze(dim = 2))
 
-            correct01 = torch.sum(correct[:, :, :1])
-            correct05 = torch.sum(correct[:, :, :5])
-            correct10 = torch.sum(correct[:, :, :10])
-            correct20 = torch.sum(correct[:, :, :20])
-            count = torch.numel(targets)
+                correct01 = torch.sum(correct[:, :, :1])
+                correct05 = torch.sum(correct[:, :, :5])
+                correct10 = torch.sum(correct[:, :, :10])
+                correct20 = torch.sum(correct[:, :, :20])
+                count = torch.numel(targets)
+        else:
+            correct01 = 0
+            correct05 = 0
+            correct10 = 0
+            correct20 = 0
+            count = 0
 
         return loss, correct01, correct05, correct10, correct20, count
