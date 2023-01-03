@@ -76,11 +76,11 @@ def train(model, optimizer, dataloader,
         losses = np.array(losses)
         loss = np.mean(losses)
 
-        print('Epoch: %2d\tLR: %f\tLoss: %f\tAcc@1: %f\tAcc@5: %f\tAcc@10: %f\tAcc@20: %f,' %
+        print('Epoch: %2d\tLR: %f\tLoss: %f\tAcc@1: %f\tAcc@5: %f\tAcc@10: %f\tAcc@20: %f' %
               (index + 1, curlr, float(loss),
                corrects01 / counts, corrects05 / counts,
                corrects10 / counts, corrects20 / counts))
-        # torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
+        torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
 
 
 if __name__ == '__main__':
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     gamma = 0.5
     epoch = 1000
     warmup = 1
-    milestone = (20, 40)
+    milestone = (20, 40, 60, 80, 100)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     torch.manual_seed(seed)

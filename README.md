@@ -30,7 +30,6 @@
 思路：
 
 - 二分图：以经纬度为参照 使用前馈神经网络 将高维编码投影到二维
-- 两张图
 - Deepwalk: [github](https://github.com/phanein/deepwalk), [paperswithcode](https://paperswithcode.com/paper/deepwalk-online-learning-of-social#code)
 - RNN/Transformer
 
