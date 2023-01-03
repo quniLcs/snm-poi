@@ -135,8 +135,9 @@ def build(device):
 
     parameter_num = 0
     for parameter in model.parameters():
-        parameter_shape = torch.tensor(parameter.shape)
-        parameter_num += torch.prod(parameter_shape)
+        if parameter.requires_grad:
+            parameter_shape = torch.tensor(parameter.shape)
+            parameter_num += torch.prod(parameter_shape)
     print('Number of parameter: %d\n' % parameter_num)
 
     return model
