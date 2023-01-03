@@ -49,7 +49,7 @@ def adjustlr(optimizer, baselr, gamma, index, iteration, batch, warmup, mileston
 
 def train(model, optimizer, criterion, trainloader, dataset,
           baselr, gamma, epoch, warmup, milestone, device, savedir = 'emb2coord'):
-    assert dataset in ('Foursquare_TKY', 'Brightkite_x')
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
     model.train()
 
     if not os.path.exists(savedir):
@@ -85,7 +85,7 @@ def train(model, optimizer, criterion, trainloader, dataset,
 
 
 def test(model, testloader, dataset, device):
-    assert dataset in ('Foursquare_TKY', 'Brightkite_x')
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
 
     # epoch = 1000
     # savedir = 'visualize'
@@ -96,6 +96,9 @@ def test(model, testloader, dataset, device):
     if dataset == 'Foursquare_TKY':
         coordinate_mean = torch.tensor([35.67766454, 139.7094122])
         coordinate_std = torch.tensor([0.06014593, 0.07728908])
+    elif dataset == 'Foursquare_NYC':
+        coordinate_mean = torch.tensor([40.75178856, -73.97417423])
+        coordinate_std = torch.tensor([0.07251354, 0.09137204])
     else:  # dataset == 'Brightkite_x'
         coordinate_mean = torch.tensor([39.80630548, -105.04022534])
         coordinate_std = torch.tensor([0.15993009, 0.1458281])
@@ -118,7 +121,8 @@ if __name__ == '__main__':
     seed = 123
 
     # dataset = 'Foursquare_TKY'
-    dataset = 'Brightkite_x'
+    dataset = 'Foursquare_NYC'
+    # dataset = 'Brightkite_x'
 
     batch_size = 128
     num_workers = 4

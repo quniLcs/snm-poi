@@ -6,13 +6,13 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
-def prepareFoursquareVenueToCoordinate():
+def prepareFoursquareVenueToCoordinate(city):
     """
     Since the latitudes and longitudes do not keep the same for a single venue all the time,
     store all the latitudes and longitudes and compute the mean for later usage.
     This function will be called only once.
     """
-    dataset = np.loadtxt('../data/Foursquare/dataset_TSMC2014_TKY.csv',
+    dataset = np.loadtxt('../data/Foursquare/dataset_TSMC2014_%s.csv'  % city,
                          delimiter = ',', skiprows = 1, dtype = str)
     coordinate_all = defaultdict(list)
     coordinate = dict()
@@ -27,10 +27,10 @@ def prepareFoursquareVenueToCoordinate():
         coordinate_array = np.array(coordinate_list)
         coordinate[venueid] = np.mean(coordinate_array, axis = 0)
 
-    with open('../data/Foursquare_TKY_venue_xy.pkl', 'wb') as file:
+    with open('../data/Foursquare_%s_venue_xy.pkl' % city, 'wb') as file:
         pickle.dump(coordinate, file)
 
-    # with open('../data/Foursquare_TKY_venue_xy.pkl', 'rb') as file:
+    # with open('../data/Foursquare_%s_venue_xy.pkl' % city, 'rb') as file:
     #     coordinate = pickle.load(file)
 
     coordinate_values = np.stack(coordinate.values())
@@ -44,7 +44,7 @@ def prepareFoursquareVenueToCoordinate():
         coordinate[venueid] -= coordinate_mean
         coordinate[venueid] /= coordinate_std
 
-    with open('../data/Foursquare_TKY_venue_tg.pkl', 'wb') as file:
+    with open('../data/Foursquare_%s_venue_tg.pkl' % city, 'wb') as file:
         pickle.dump(coordinate, file)
 
 
@@ -99,10 +99,10 @@ class EmbeddingAndCoordinate(Dataset):
     def __init__(self, name, mode):
         """
         A Pytorch Dataset Sub-class
-        :param name: 'Foursquare_TKY' or 'Brightkite_x'
+        :param name: 'Foursquare_TKY', 'Foursquare_NYC' or 'Brightkite_x'
         :param mode: 'venue' or 'user'
         """
-        assert name in ('Foursquare_TKY', 'Brightkite_x')
+        assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
         assert mode in ('venue', 'user')
         with open('data/%s_%s_wv.pkl' % (name, mode), 'rb') as file:
             embedding = pickle.load(file)
@@ -130,5 +130,6 @@ class EmbeddingAndCoordinate(Dataset):
 
 
 if __name__ == '__main__':
-    # prepareFoursquareVenueToCoordinate()
-    prepareBrightkiteVenueToCoordinate()
+    # prepareFoursquareVenueToCoordinate('TKY')
+    prepareFoursquareVenueToCoordinate('NYC')
+    # prepareBrightkiteVenueToCoordinate()
