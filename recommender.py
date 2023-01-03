@@ -11,8 +11,8 @@ from dataset import Trajectory
 from model import Recommender
 
 
-def build(device):
-    model = Recommender(device = device)
+def build(dataset, device):
+    model = Recommender(dataset = dataset, device = device)
     model.to(device)
 
     for module in model.modules():
@@ -86,6 +86,10 @@ def train(model, optimizer, dataloader,
 if __name__ == '__main__':
     seed = 123
 
+    # dataset = 'Foursquare_TKY'
+    # dataset = 'Foursquare_NYC'
+    dataset = 'Brightkite_x'
+
     batch_size = 1
     num_workers = 4
 
@@ -101,8 +105,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
 
-    model = build(device)
+    model = build(dataset, device)
     optimizer = torch.optim.Adam(model.parameters(), lr = baselr)
 
-    dataloader = load(batch_size, num_workers, shuffle = True)
+    dataloader = load(dataset, batch_size, num_workers, shuffle = True)
     train(model, optimizer, dataloader, baselr, gamma, epoch, warmup, milestone, device)

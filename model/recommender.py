@@ -19,13 +19,14 @@ class TimeToEmbedding(nn.Module):
 
 
 class Recommender(nn.Module):
-    def __init__(self, vector_size = 64, criterion = 'MSELoss', device = 'cpu'):
+    def __init__(self, vector_size = 64, criterion = 'MSELoss', dataset = 'Foursquare_TKY', device = 'cpu'):
         super().__init__()
         assert criterion in ('CrossEntropyLoss', 'MSELoss')
+        assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
 
-        with open('data/Foursquare_TKY_venue_em.pkl', 'rb') as file:
+        with open('data/%s_venue_em.pkl' % dataset, 'rb') as file:
             venue_embeddings = pickle.load(file)
-        with open('data/Foursquare_TKY_user_em.pkl',  'rb') as file:
+        with open('data/%s_user_em.pkl'  % dataset, 'rb') as file:
             user_embeddings = pickle.load(file)
 
         self.venue_embeddings = torch.tensor(venue_embeddings).to(device)
