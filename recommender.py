@@ -28,8 +28,8 @@ def build(device):
     return model
 
 
-def load(batch_size, num_workers, shuffle):
-    dataset = Trajectory()
+def load(name, batch_size, num_workers, shuffle):
+    dataset = Trajectory(name)
     print('Loaded %d trajectories' % len(dataset))
 
     dataloader = DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, shuffle = shuffle)
