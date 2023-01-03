@@ -38,7 +38,7 @@ def load(name, batch_size, num_workers, shuffle):
     return dataloader
 
 
-def train(model, optimizer, dataloader,
+def train(model, optimizer, dataloader, dataset,
           baselr, gamma, epoch, warmup, milestone,
           device, savedir = 'recommend'):
     model.train()
@@ -80,15 +80,15 @@ def train(model, optimizer, dataloader,
               (index + 1, curlr, float(loss),
                corrects01 / counts, corrects05 / counts,
                corrects10 / counts, corrects20 / counts))
-        torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
+        torch.save(model, os.path.join(savedir, '%s_recommender_ep%d' % (dataset, index + 1)))
 
 
 if __name__ == '__main__':
     seed = 123
 
-    # dataset = 'Foursquare_TKY'
+    dataset = 'Foursquare_TKY'
     # dataset = 'Foursquare_NYC'
-    dataset = 'Brightkite_x'
+    # dataset = 'Brightkite_x'
 
     batch_size = 1
     num_workers = 4
@@ -109,4 +109,4 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr = baselr)
 
     dataloader = load(dataset, batch_size, num_workers, shuffle = True)
-    train(model, optimizer, dataloader, baselr, gamma, epoch, warmup, milestone, device)
+    train(model, optimizer, dataloader, dataset, baselr, gamma, epoch, warmup, milestone, device)

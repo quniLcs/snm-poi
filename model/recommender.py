@@ -58,17 +58,19 @@ class Recommender(nn.Module):
         venue_embedding = self.venue2embedding(venue)
         time_embedding = self.time2embedding(time)
 
-        hiddens = torch.unsqueeze(user_embedding, dim = 1)
+        hidden0 = torch.unsqueeze(user_embedding, dim = 1)
         inputs = venue_embedding + time_embedding
 
         if test:
-            outputs, hiddens = self.rnn(inputs[:, :-3, :], hiddens)
-            outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
-            targets = venue[:, 1:-3]
+            outputs, hiddenn = self.rnn(inputs[:, :-3, :], hidden0)
+            outputs = torch.cat((hidden0, outputs), dim = 1)
+            outputs = outputs[:, :-1, :] - time_embedding[:, :-3, :]
+            targets = venue[:, :-3]
         else:
-            outputs, hiddens = self.rnn(inputs, hiddens)
-            outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
-            targets = venue[:, 1:]
+            outputs, hiddenn = self.rnn(inputs, hidden0)
+            outputs = torch.cat((hidden0, outputs), dim = 1)
+            outputs = outputs[:, :-1, :] - time_embedding
+            targets = venue
 
         if self.criterion == 'CrossEntropyLoss':
             outputs = torch.inner(outputs, self.venue_embeddings)
@@ -80,8 +82,8 @@ class Recommender(nn.Module):
 
         if test:
             with torch.no_grad():
-                outputs, _ = self.rnn(inputs[:, -3:, :], hiddens)
-                outputs = torch.cat((hiddens, outputs), dim = 1)
+                outputs, _ = self.rnn(inputs[:, -3:, :], hiddenn)
+                outputs = torch.cat((hiddenn, outputs), dim = 1)
                 outputs = outputs[:, :-1, :] - time_embedding[:, -3:, :]
                 targets = venue[:, -3:]
 
