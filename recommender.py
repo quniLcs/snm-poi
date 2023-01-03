@@ -130,9 +130,9 @@ class Recommender(nn.Module):
         hiddens = torch.unsqueeze(user_embedding, dim = 1)
         inputs = venue_embedding + time_embedding
 
-        outputs, hiddens = self.rnn(inputs, hiddens)
-        outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
-        targets = venue[:, 1:]
+        outputs, hiddens = self.rnn(inputs[:, :-3, :], hiddens)
+        outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
+        targets = venue[:, 1:-3]
 
         if self.criterion == 'CrossEntropyLoss':
             outputs = torch.inner(outputs, self.venue_embeddings)
@@ -140,8 +140,15 @@ class Recommender(nn.Module):
             outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
         else:  # self.criterion == 'MSELoss'
             targets = self.venue2embedding(targets)
+        loss = self.loss(outputs, targets)
 
-        return self.loss(outputs, targets)
+        with torch.no_grad():
+            outputs, _ = self.rnn(inputs[:, -3:, :], hiddens)
+            # outputs = torch.
+            # outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
+            # targets = venue[:, -3:]
+
+        return loss
 
 
 def build(device):
@@ -150,7 +157,7 @@ def build(device):
 
     for module in model.modules():
         if type(module) == nn.Linear:
-            nn.init.orthogonal(module.weight)
+            nn.init.orthogonal_(module.weight)
 
     parameter_num = 0
     for parameter in model.parameters():
@@ -188,9 +195,6 @@ def train(model, optimizer, dataloader,
         for iteration, (user, (venue, time)) in tqdm(enumerate(dataloader)):
             curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
 
-            venue = venue[:, :-3]
-            time = time[:, :-3, :]
-
             user = user.to(device)
             venue = venue.to(device)
             time = time.to(device)
@@ -206,7 +210,7 @@ def train(model, optimizer, dataloader,
         loss = np.mean(losses)
 
         print('Epoch: %2d\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
-        torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
+        # torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
 
 
 if __name__ == '__main__':
