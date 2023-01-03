@@ -115,6 +115,8 @@ class Recommender(nn.Module):
         self.rnn = nn.RNN(vector_size, vector_size, batch_first = True)
         self.softmax = nn.Softmax(dim = 2)
 
+        self.loss = nn.CrossEntropyLoss()
+
     def forward(self, user, venue, time):
         user_embedding = self.user2embedding(user)
         venue_embedding = self.venue2embedding(venue)
@@ -126,7 +128,11 @@ class Recommender(nn.Module):
         outputs, hiddens = self.rnn(inputs, hiddens)
         outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
         outputs = torch.inner(outputs, self.venue_embeddings)
-        return self.softmax(outputs)
+        outputs = self.softmax(outputs)
+        outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
+
+        targets = venue[:, 1:]
+        return self.loss(outputs, targets)
 
 
 def build(device):
@@ -157,7 +163,7 @@ def load(batch_size, num_workers, shuffle):
     return dataloader
 
 
-def train(model, optimizer, criterion, dataloader,
+def train(model, optimizer, dataloader,
           baselr, gamma, epoch, warmup, milestone,
           device, savedir = 'recommend'):
     model.train()
@@ -180,11 +186,7 @@ def train(model, optimizer, criterion, dataloader,
             venue = venue.to(device)
             time = time.to(device)
 
-            outputs = model(user, venue, time)
-            outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
-            targets = venue[:, 1:]
-
-            loss = criterion(outputs, targets)
+            loss = model(user, venue, time)
             losses.append(loss.item())
 
             optimizer.zero_grad()
@@ -218,11 +220,10 @@ if __name__ == '__main__':
 
     model = build(device)
     optimizer = torch.optim.Adam(model.parameters(), lr = baselr)
-    criterion = nn.CrossEntropyLoss()
 
     # prepareNodeToEmbedding(mode = 'venue')
     # prepareNodeToEmbedding(mode = 'user')
     # prepareUserToTrajectory()
 
     dataloader = load(batch_size, num_workers, shuffle = True)
-    train(model, optimizer, criterion, dataloader, baselr, gamma, epoch, warmup, milestone, device)
+    train(model, optimizer, dataloader, baselr, gamma, epoch, warmup, milestone, device)
