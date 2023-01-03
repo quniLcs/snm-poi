@@ -48,7 +48,7 @@ def adjustlr(optimizer, baselr, gamma, index, iteration, batch, warmup, mileston
 
 
 def train(model, optimizer, criterion, trainloader, dataset,
-          baselr, gamma, epoch, warmup, milestone, device, savedir = 'visualize'):
+          baselr, gamma, epoch, warmup, milestone, device, savedir = 'emb2coord'):
     assert dataset in ('Foursquare_TKY', 'Brightkite_x')
     model.train()
 
