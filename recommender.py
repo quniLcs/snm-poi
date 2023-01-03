@@ -111,7 +111,7 @@ class Recommender(nn.Module):
         self.user2embedding  = nn.Embedding.from_pretrained(self.user_embeddings)
         self.time2embedding = TimeToEmbedding()
 
-        self.rnn = nn.RNN(vector_size, vector_size)
+        self.rnn = nn.RNN(vector_size, vector_size, batch_first = True)
         self.softmax = nn.Softmax(dim = 1)
 
     def forward(self, user, venue, time):
@@ -119,11 +119,11 @@ class Recommender(nn.Module):
         venue_embedding = self.venue2embedding(venue)
         time_embedding = self.time2embedding(time)
 
-        hiddens = user_embedding
+        hiddens = torch.unsqueeze(user_embedding, dim = 1)
         inputs = venue_embedding + time_embedding
 
         outputs, hiddens = self.rnn(inputs, hiddens)
-        outputs = outputs[:-1] - time_embedding[1:]
+        outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
         outputs = torch.inner(outputs, self.venue_embeddings)
         return self.softmax(outputs)
 
@@ -161,10 +161,8 @@ def train(model, optimizer, criterion, dataloader,
 
     for index in range(epoch):
         losses = []
-        train_correct = 0
-        train_count   = 0
-        test_correct  = 0
-        test_count    = 0
+        correct = 0
+        count   = 0
 
         for iteration, (user, (venue, time)) in tqdm(enumerate(dataloader)):
             curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
