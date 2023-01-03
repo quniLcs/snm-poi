@@ -97,8 +97,9 @@ class TimeToEmbedding(nn.Module):
 
 
 class Recommender(nn.Module):
-    def __init__(self, vector_size = 64, device = 'cpu'):
+    def __init__(self, vector_size = 64, criterion = 'MSELoss', device = 'cpu'):
         super().__init__()
+        assert criterion in ('CrossEntropyLoss', 'MSELoss')
 
         with open('data/Foursquare_TKY_venue_em.pkl', 'rb') as file:
             venue_embeddings = pickle.load(file)
@@ -115,7 +116,11 @@ class Recommender(nn.Module):
         self.rnn = nn.RNN(vector_size, vector_size, batch_first = True)
         self.softmax = nn.Softmax(dim = 2)
 
-        self.loss = nn.CrossEntropyLoss()
+        self.criterion = criterion
+        if self.criterion == 'CrossEntropyLoss':
+            self.loss = nn.CrossEntropyLoss()
+        else:  # self.criterion == 'MSELoss'
+            self.loss = nn.MSELoss()
 
     def forward(self, user, venue, time):
         user_embedding = self.user2embedding(user)
@@ -127,11 +132,15 @@ class Recommender(nn.Module):
 
         outputs, hiddens = self.rnn(inputs, hiddens)
         outputs = outputs[:, :-1, :] - time_embedding[:, 1:, :]
-        outputs = torch.inner(outputs, self.venue_embeddings)
-        outputs = self.softmax(outputs)
-        outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
-
         targets = venue[:, 1:]
+
+        if self.criterion == 'CrossEntropyLoss':
+            outputs = torch.inner(outputs, self.venue_embeddings)
+            outputs = self.softmax(outputs)
+            outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
+        else:  # self.criterion == 'MSELoss'
+            targets = self.venue2embedding(targets)
+
         return self.loss(outputs, targets)
 
 
