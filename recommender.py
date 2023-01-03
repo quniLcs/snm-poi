@@ -73,6 +73,7 @@ class Trajectory(Dataset):
 
         with open('data/Foursquare_TKY_user_tr_i.pkl', 'rb') as file:
             self.dataset = pickle.load(file)
+        self.dataset = {index: self.dataset[index] for index in range(5)}
 
     def __len__(self):
         return len(self.dataset)
@@ -173,7 +174,7 @@ def train(model, optimizer, criterion, dataloader,
 
             outputs = model(user, venue, time)
             outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
-            targets = venue[:, :-1]
+            targets = venue[:, 1:]
 
             loss = criterion(outputs, targets)
             losses.append(loss.item())
@@ -195,7 +196,7 @@ if __name__ == '__main__':
     batch_size = 1
     num_workers = 4
 
-    baselr = 0.001
+    baselr = 0.01
     gamma = 0.1
     epoch = 1000
     warmup = 1

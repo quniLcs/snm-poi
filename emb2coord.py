@@ -35,7 +35,7 @@ def load(name, mode, batch_size, num_workers, shuffle):
 
 def adjustlr(optimizer, baselr, gamma, index, iteration, batch, warmup, milestone):
     if index < warmup:
-        curlr = iteration / (batch * warmup) * baselr
+        curlr = (iteration + index * batch) / (warmup * batch) * baselr
     else:
         curlr = baselr
         for epoch in milestone:
