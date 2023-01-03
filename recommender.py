@@ -73,7 +73,7 @@ class Trajectory(Dataset):
 
         with open('data/Foursquare_TKY_user_tr_i.pkl', 'rb') as file:
             self.dataset = pickle.load(file)
-        self.dataset = {index: self.dataset[index] for index in range(5)}
+        # self.dataset = {index: self.dataset[index] for index in range(5)}
 
     def __len__(self):
         return len(self.dataset)
@@ -144,11 +144,21 @@ class Recommender(nn.Module):
 
         with torch.no_grad():
             outputs, _ = self.rnn(inputs[:, -3:, :], hiddens)
-            # outputs = torch.
-            # outputs = outputs[:, :-1, :] - time_embedding[:, 1:-3, :]
-            # targets = venue[:, -3:]
+            outputs = torch.cat((hiddens, outputs), dim = 1)
+            outputs = outputs[:, :-1, :] - time_embedding[:, -3:, :]
+            targets = venue[:, -3:]
 
-        return loss
+            outputs = torch.inner(outputs, self.venue_embeddings)
+            _, outputs = torch.topk(outputs, k = 20, dim = 2)
+            correct = torch.eq(outputs, targets.unsqueeze(dim = 2))
+
+            correct01 = torch.sum(correct[:, :, :1])
+            correct05 = torch.sum(correct[:, :, :5])
+            correct10 = torch.sum(correct[:, :, :10])
+            correct20 = torch.sum(correct[:, :, :20])
+            count = torch.numel(targets)
+
+        return loss, correct01, correct05, correct10, correct20, count
 
 
 def build(device):
@@ -162,8 +172,7 @@ def build(device):
     parameter_num = 0
     for parameter in model.parameters():
         if parameter.requires_grad:
-            parameter_shape = torch.tensor(parameter.shape)
-            parameter_num += torch.prod(parameter_shape)
+            parameter_num += torch.numel(parameter)
     print('Number of parameter: %d\n' % parameter_num)
 
     return model
@@ -189,8 +198,11 @@ def train(model, optimizer, dataloader,
 
     for index in range(epoch):
         losses = []
-        correct = 0
-        count   = 0
+        corrects01 = 0
+        corrects05 = 0
+        corrects10 = 0
+        corrects20 = 0
+        counts = 0
 
         for iteration, (user, (venue, time)) in tqdm(enumerate(dataloader)):
             curlr = adjustlr(optimizer, baselr, gamma, index, iteration, len(dataloader), warmup, milestone)
@@ -199,7 +211,12 @@ def train(model, optimizer, dataloader,
             venue = venue.to(device)
             time = time.to(device)
 
-            loss = model(user, venue, time)
+            loss, correct01, correct05, correct10, correct20, count = model(user, venue, time)
+            corrects01 += correct01
+            corrects05 += correct05
+            corrects10 += correct10
+            corrects20 += correct20
+            counts += count
             losses.append(loss.item())
 
             optimizer.zero_grad()
@@ -209,7 +226,10 @@ def train(model, optimizer, dataloader,
         losses = np.array(losses)
         loss = np.mean(losses)
 
-        print('Epoch: %2d\tLR: %f\tLoss: %f' % (index + 1, curlr, float(loss)))
+        print('Epoch: %2d\tLR: %f\tLoss: %f\tAcc@1: %f\tAcc@5: %f\tAcc@10: %f\tAcc@20: %f,' %
+              (index + 1, curlr, float(loss),
+               corrects01 / counts, corrects05 / counts,
+               corrects10 / counts, corrects20 / counts))
         # torch.save(model, os.path.join(savedir, 'recommender_ep%d' % (index + 1)))
 
 
