@@ -170,8 +170,10 @@ def train(model, optimizer, criterion, dataloader,
             user = user.to(device)
             venue = venue.to(device)
             time = time.to(device)
+
             outputs = model(user, venue, time)
-            targets = venue[:-1]
+            outputs = torch.transpose(outputs, dim0 = 1, dim1 = 2)
+            targets = venue[:, :-1]
 
             loss = criterion(outputs, targets)
             losses.append(loss.item())
