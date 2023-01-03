@@ -85,8 +85,8 @@ class TimeToEmbedding(nn.Module):
     def __init__(self, input_size = 8, hidden_size = 128, output_size = 64):
         super().__init__()
         self.linear = nn.Sequential(
-            nn.Linear(input_size, output_size),
-            nn.BatchNorm1d(output_size),
+            nn.Linear(input_size, hidden_size),
+            # nn.BatchNorm1d(hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, output_size)
         )
@@ -122,7 +122,7 @@ class Recommender(nn.Module):
         hiddens = user_embedding
         inputs = venue_embedding + time_embedding
 
-        outputs, hiddens = self.RNN(inputs, hiddens)
+        outputs, hiddens = self.rnn(inputs, hiddens)
         outputs = outputs[:-1] - time_embedding[1:]
         outputs = torch.inner(outputs, self.venue_embeddings)
         return self.softmax(outputs)
