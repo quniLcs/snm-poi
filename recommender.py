@@ -97,7 +97,7 @@ class TimeToEmbedding(nn.Module):
 
 
 class Recommender(nn.Module):
-    def __init__(self, vector_size = 64):
+    def __init__(self, vector_size = 64, device = 'cpu'):
         super().__init__()
 
         with open('data/Foursquare_TKY_venue_em.pkl', 'rb') as file:
@@ -105,8 +105,8 @@ class Recommender(nn.Module):
         with open('data/Foursquare_TKY_user_em.pkl',  'rb') as file:
             user_embeddings = pickle.load(file)
 
-        self.venue_embeddings = torch.tensor(venue_embeddings)
-        self.user_embeddings  = torch.tensor(user_embeddings)
+        self.venue_embeddings = torch.tensor(venue_embeddings).to(device)
+        self.user_embeddings  = torch.tensor(user_embeddings).to(device)
 
         self.venue2embedding = nn.Embedding.from_pretrained(self.venue_embeddings)
         self.user2embedding  = nn.Embedding.from_pretrained(self.user_embeddings)
@@ -130,8 +130,12 @@ class Recommender(nn.Module):
 
 
 def build(device):
-    model = Recommender()
+    model = Recommender(device = device)
     model.to(device)
+
+    for module in model.modules():
+        if type(module) == nn.Linear:
+            nn.init.orthogonal(module.weight)
 
     parameter_num = 0
     for parameter in model.parameters():
