@@ -39,9 +39,26 @@ def prepareUserToTrajectory():
 
     index2trajectory = dict()
     for user, trajectory in user2trajectory.items():
+        venues = list()
+        dates = list()
+
+        for venue, time in zip(*trajectory):
+            venues.append(venue2index[venue])
+            date = str2date(time)
+            dates.append([
+                date.year - 2012,
+                date.month / 12,
+                date.day / 30,
+                date.weekday() / 7,
+                date.hour / 24,
+                date.minute / 60,
+                date.second / 60,
+                date.microsecond / 1000
+            ])
+
         index2trajectory[user2index[user]] = (
-            torch.tensor([venue2index[venue] for venue in trajectory[0]]),
-            torch.tensor([str2date(time) for time in trajectory[1]])
+            torch.tensor(venues),
+            torch.tensor(dates)
         )
 
     with open('data/Foursquare_TKY_user_tr_i.pkl', 'wb') as file:
@@ -69,22 +86,12 @@ class TimeToEmbedding(nn.Module):
         super().__init__()
         self.linear = nn.Sequential(
             nn.Linear(input_size, output_size),
-            nn.BatchNorm1d(hidden_size),
+            nn.BatchNorm1d(output_size),
             nn.ReLU(),
             nn.Linear(hidden_size, output_size)
         )
 
-    def forward(self, time):
-        inputs = [
-            time.year - 2012,
-            time.month / 12,
-            time.day / 30,
-            time.weekday() / 7,
-            time.hour / 24,
-            time.minute / 60,
-            time.second / 60,
-            time.microsecond / 1000
-        ]
+    def forward(self, inputs):
         return self.linear(inputs)
 
 
@@ -102,6 +109,7 @@ class Recommender(nn.Module):
 
         self.venue2embedding = nn.Embedding.from_pretrained(self.venue_embeddings)
         self.user2embedding  = nn.Embedding.from_pretrained(self.user_embeddings)
+        self.time2embedding = TimeToEmbedding()
 
         self.rnn = nn.RNN(vector_size, vector_size)
         self.softmax = nn.Softmax(dim = 1)
