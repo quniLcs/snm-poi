@@ -1,4 +1,4 @@
 import numpy as np
 from gensim.models import Word2Vec
 from .emb2coord import EmbeddingToCoordinate
-from .recommender import RNNRecommender
+from .recommender import RNNRecommender, TimeRecommender
