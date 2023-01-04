@@ -68,7 +68,7 @@ def train(model, optimizer, dataloader, dataset,
 
             loss, output, correct01, correct05, correct10, correct20, count = model(user, venue, time)
             # if output is not None:
-            #     outputs[int(user)] = output[0]
+            #     outputs[int(user)] = output[0].to(cpu)
             corrects01 += correct01
             corrects05 += correct05
             corrects10 += correct10
