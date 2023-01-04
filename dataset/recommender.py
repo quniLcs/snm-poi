@@ -93,8 +93,6 @@ def prepareUserToRecommend(dataset):
 class Trajectory(Dataset):
     def __init__(self, name):
         assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
-        if name == 'Foursquare_NYC_LCS':
-            name = 'Foursquare_NYC'
 
         # Save trajectory data from Foursquare and Brightkite dataset
         # with open('../data/Foursquare_TKY_user_tr.pkl', 'wb') as file:
