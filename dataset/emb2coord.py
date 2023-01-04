@@ -99,13 +99,16 @@ class EmbeddingAndCoordinate(Dataset):
     def __init__(self, name, mode):
         """
         A Pytorch Dataset Sub-class
-        :param name: 'Foursquare_TKY', 'Foursquare_NYC' or 'Brightkite_x'
+        :param name: 'Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS' or 'Brightkite_x'
         :param mode: 'venue' or 'user'
         """
-        assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
+        assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
         assert mode in ('venue', 'user')
         with open('data/%s_%s_wv.pkl' % (name, mode), 'rb') as file:
             embedding = pickle.load(file)
+
+        if name == 'Foursquare_NYC_LCS':
+            name = 'Foursquare_NYC'
 
         if mode == 'venue':
             with open('data/%s_venue_tg.pkl' % name,  'rb') as file:
