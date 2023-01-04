@@ -1,4 +1,5 @@
 import os
+# import pickle
 from tqdm import tqdm
 
 import numpy as np
@@ -41,6 +42,9 @@ def load(name, batch_size, num_workers, shuffle):
 def train(model, optimizer, dataloader, dataset,
           baselr, gamma, epoch, warmup, milestone,
           device, savedir = 'recommend'):
+    # epoch = 100
+    # model = torch.load(os.path.join(savedir, '%s_emb2coord_ep%d' % (dataset, epoch)))
+
     model.train()
 
     if not os.path.exists(savedir):
@@ -48,6 +52,7 @@ def train(model, optimizer, dataloader, dataset,
 
     for index in range(epoch):
         losses = []
+        # outputs = {}
         corrects01 = 0
         corrects05 = 0
         corrects10 = 0
@@ -61,7 +66,8 @@ def train(model, optimizer, dataloader, dataset,
             venue = venue.to(device)
             time = time.to(device)
 
-            loss, correct01, correct05, correct10, correct20, count = model(user, venue, time)
+            loss, output, correct01, correct05, correct10, correct20, count = model(user, venue, time)
+            # outputs[int(user)] = output[0]
             corrects01 += correct01
             corrects05 += correct05
             corrects10 += correct10
@@ -81,14 +87,16 @@ def train(model, optimizer, dataloader, dataset,
                corrects01 / counts, corrects05 / counts,
                corrects10 / counts, corrects20 / counts))
         torch.save(model, os.path.join(savedir, '%s_recommender_ep%d' % (dataset, index + 1)))
+        # with open('data/%s_user_re_i.pkl' % dataset, 'wb') as file:
+        #     pickle.dump(outputs, file)
 
 
 if __name__ == '__main__':
     seed = 123
 
-    # dataset = 'Foursquare_TKY'
+    dataset = 'Foursquare_TKY'
     # dataset = 'Foursquare_NYC'
-    dataset = 'Brightkite_x'
+    # dataset = 'Brightkite_x'
 
     batch_size = 1
     num_workers = 4

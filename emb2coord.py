@@ -89,7 +89,7 @@ def test(model, testloader, dataset, device):
 
     # epoch = 1000
     # savedir = 'visualize'
-    # model = torch.load(os.path.join(savedir, 'emb2coord_ep%d' % epoch))
+    # model = torch.load(os.path.join(savedir, '%s_emb2coord_ep%d' % (dataset, epoch)))
     model.eval()
 
     coordinate = list()

@@ -97,10 +97,11 @@ class Recommender(nn.Module):
                 correct20 = torch.sum(correct[:, :, :20])
                 count = torch.numel(targets)
         else:
+            outputs = None
             correct01 = 0
             correct05 = 0
             correct10 = 0
             correct20 = 0
             count = 0
 
-        return loss, correct01, correct05, correct10, correct20, count
+        return loss, outputs, correct01, correct05, correct10, correct20, count
