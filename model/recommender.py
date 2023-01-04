@@ -94,7 +94,8 @@ class RNNRecommender(nn.Module):
 
                 outputs = torch.inner(outputs, self.venue_embeddings)
                 _, outputs = torch.topk(outputs, k = 20, dim = 2)
-                correct = torch.eq(outputs, targets.unsqueeze(dim = 2))
+                targets = targets.unsqueeze(dim = 2)
+                correct = torch.eq(outputs, targets)
 
                 correct01 = torch.sum(correct[:, :, :1])
                 correct05 = torch.sum(correct[:, :, :5])
@@ -143,8 +144,10 @@ class SimpleRecommender(nn.Module):
                 targets = venue[:, -3:]
 
                 outputs = torch.inner(user_embedding, self.venue_embeddings)
-                _, outputs = torch.topk(outputs, k = 20, dim = 2)
-                correct = torch.eq(outputs, targets.unsqueeze(dim=2))
+                _, outputs = torch.topk(outputs, k = 20, dim = 1)
+                outputs = outputs.unsqueeze(dim = 1)
+                targets = targets.unsqueeze(dim = 2)
+                correct = torch.eq(outputs, targets)
 
                 correct01 = torch.sum(correct[:, :, :1])
                 correct05 = torch.sum(correct[:, :, :5])
