@@ -16,7 +16,8 @@ def prepareBrightkiteYear(year):
 
 
 def prepareNodeToEmbedding(dataset, mode):
-    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x',
+                       'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
     assert mode in ('venue', 'user')
 
     with open('../data/%s_%s_wv.pkl' % (dataset, mode), 'rb') as file:
@@ -36,7 +37,8 @@ def prepareNodeToEmbedding(dataset, mode):
 
 
 def prepareUserToTrajectory(dataset, time2date, prepareYear):
-    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x',
+                       'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
 
     with open('../data/%s_user_tr.pkl'  % dataset, 'rb') as file:
         user2trajectory = pickle.load(file)
@@ -74,7 +76,8 @@ def prepareUserToTrajectory(dataset, time2date, prepareYear):
 
 
 def prepareUserToRecommend(dataset):
-    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x',
+                       'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
 
     with open('../data/%s_user_re_i.pkl' % dataset, 'rb') as file:
         index2recommend = pickle.load(file)
@@ -92,7 +95,8 @@ def prepareUserToRecommend(dataset):
 
 class Trajectory(Dataset):
     def __init__(self, name):
-        assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+        assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x',
+                        'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
 
         # Save trajectory data from Foursquare and Brightkite dataset
         # with open('../data/Foursquare_TKY_user_tr.pkl', 'wb') as file:
@@ -122,10 +126,21 @@ if __name__ == '__main__':
     # prepareNodeToEmbedding('Foursquare_NYC_LCS', 'user')
     # prepareNodeToEmbedding('Brightkite_x', 'venue')
     # prepareNodeToEmbedding('Brightkite_x', 'user')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_u', 'venue')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_u', 'user')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_v', 'venue')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_v', 'user')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_u_no_v', 'venue')
+    # prepareNodeToEmbedding('Foursquare_TKY_no_u_no_v', 'user')
+
     # prepareUserToTrajectory('Foursquare_TKY', time2date = str2date, prepareYear = prepareFoursquareYear)
     # prepareUserToTrajectory('Foursquare_NYC', time2date = str2date, prepareYear = prepareFoursquareYear)
-    prepareUserToTrajectory('Foursquare_NYC_LCS', time2date = str2date, prepareYear = prepareFoursquareYear)
+    # prepareUserToTrajectory('Foursquare_NYC_LCS', time2date = str2date, prepareYear = prepareFoursquareYear)
     # prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk, prepareYear = prepareBrightkiteYear)
+    prepareUserToTrajectory('Foursquare_TKY_no_u', time2date = str2date, prepareYear = prepareFoursquareYear)
+    prepareUserToTrajectory('Foursquare_TKY_no_v', time2date = str2date, prepareYear = prepareFoursquareYear)
+    prepareUserToTrajectory('Foursquare_TKY_no_u_no_v', time2date = str2date, prepareYear = prepareFoursquareYear)
+
     # prepareUserToRecommend('Foursquare_TKY')
     # prepareUserToRecommend('Foursquare_NYC')
     # prepareUserToRecommend('Foursquare_NYC_LCS')
