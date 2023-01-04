@@ -117,9 +117,9 @@ class SimpleRecommender(nn.Module):
         super().__init__()
         assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
 
-        with open('data/%s_venue_em.pkl' % dataset, 'rb') as file:
+        with open('../data/%s_venue_em.pkl' % dataset, 'rb') as file:
             venue_embeddings = pickle.load(file)
-        with open('data/%s_user_em.pkl'  % dataset, 'rb') as file:
+        with open('../data/%s_user_em.pkl'  % dataset, 'rb') as file:
             user_embeddings = pickle.load(file)
 
         self.venue_embeddings = torch.tensor(venue_embeddings).to(device)
@@ -178,11 +178,9 @@ def load(name, batch_size, num_workers, shuffle):
     return dataloader
 
 
-def test(model, dataloader,  # dataset,
-         device):
+def test(model, dataloader, device):
     model.eval()
 
-    # outputs = {}
     corrects01 = 0
     corrects05 = 0
     corrects10 = 0
@@ -194,8 +192,6 @@ def test(model, dataloader,  # dataset,
         venue = venue.to(device)
 
         output, correct01, correct05, correct10, correct20, count = model(user, venue)
-        # if output is not None:
-        #     outputs[int(user)] = output[0].to('cpu')
         corrects01 += correct01
         corrects05 += correct05
         corrects10 += correct10
@@ -205,16 +201,14 @@ def test(model, dataloader,  # dataset,
     print('Acc@1: %f\tAcc@5: %f\tAcc@10: %f\tAcc@20: %f' %
           (corrects01 / counts, corrects05 / counts,
            corrects10 / counts, corrects20 / counts))
-    # with open('data/%s_user_re_i.pkl' % dataset, 'wb') as file:
-    #     pickle.dump(outputs, file)
 
 
 if __name__ == '__main__':
     seed = 123
 
-    # dataset = 'Foursquare_TKY'
+    dataset = 'Foursquare_TKY'
     # dataset = 'Foursquare_NYC'
-    dataset = 'Foursquare_NYC_LCS'
+    # dataset = 'Foursquare_NYC_LCS'
     # dataset = 'Brightkite_x'
 
     batch_size = 1
