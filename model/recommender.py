@@ -22,7 +22,7 @@ class Recommender(nn.Module):
     def __init__(self, vector_size = 64, criterion = 'MSELoss', dataset = 'Foursquare_TKY', device = 'cpu'):
         super().__init__()
         assert criterion in ('CrossEntropyLoss', 'MSELoss')
-        assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
+        assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
 
         with open('data/%s_venue_em.pkl' % dataset, 'rb') as file:
             venue_embeddings = pickle.load(file)
