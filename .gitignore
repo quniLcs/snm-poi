@@ -1,7 +1,7 @@
 /data/
 /log/
 /emb2coord/
-/recommend/
+/recommender/
 /old_ckpt/
 /rnn.pptx
 /train.pptx
