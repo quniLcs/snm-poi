@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-# from utils.data_cvt import str2date, str2date_Bk
+from utils.data_cvt import str2date  # , str2date_Bk
 
 
 def prepareFoursquareYear(year):
@@ -16,7 +16,9 @@ def prepareBrightkiteYear(year):
 
 
 def prepareNodeToEmbedding(dataset, mode):
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
     assert mode in ('venue', 'user')
+
     with open('../data/%s_%s_wv.pkl' % (dataset, mode), 'rb') as file:
         node2embedding = pickle.load(file)
 
@@ -34,6 +36,8 @@ def prepareNodeToEmbedding(dataset, mode):
 
 
 def prepareUserToTrajectory(dataset, time2date, prepareYear):
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+
     with open('../data/%s_user_tr.pkl'  % dataset, 'rb') as file:
         user2trajectory = pickle.load(file)
     with open('../data/%s_venue_ii.pkl' % dataset, 'rb') as file:
@@ -70,6 +74,8 @@ def prepareUserToTrajectory(dataset, time2date, prepareYear):
 
 
 def prepareUserToRecommend(dataset):
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
+
     with open('../data/%s_user_re_i.pkl' % dataset, 'rb') as file:
         index2recommend = pickle.load(file)
     with open('../data/%s_user_ii.pkl'   % dataset, 'rb') as file:
@@ -114,11 +120,15 @@ if __name__ == '__main__':
     # prepareNodeToEmbedding('Foursquare_TKY', 'user')
     # prepareNodeToEmbedding('Foursquare_NYC', 'venue')
     # prepareNodeToEmbedding('Foursquare_NYC', 'user')
+    # prepareNodeToEmbedding('Foursquare_NYC_LCS', 'venue')
+    # prepareNodeToEmbedding('Foursquare_NYC_LCS', 'user')
     # prepareNodeToEmbedding('Brightkite_x', 'venue')
     # prepareNodeToEmbedding('Brightkite_x', 'user')
     # prepareUserToTrajectory('Foursquare_TKY', time2date = str2date, prepareYear = prepareFoursquareYear)
     # prepareUserToTrajectory('Foursquare_NYC', time2date = str2date, prepareYear = prepareFoursquareYear)
+    prepareUserToTrajectory('Foursquare_NYC_LCS', time2date = str2date, prepareYear = prepareFoursquareYear)
     # prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk, prepareYear = prepareBrightkiteYear)
-    prepareUserToRecommend('Foursquare_TKY')
-    prepareUserToRecommend('Foursquare_NYC')
-    prepareUserToRecommend('Brightkite_x')
+    # prepareUserToRecommend('Foursquare_TKY')
+    # prepareUserToRecommend('Foursquare_NYC')
+    # prepareUserToRecommend('Foursquare_NYC_LCS')
+    # prepareUserToRecommend('Brightkite_x')
