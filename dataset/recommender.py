@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from utils.data_cvt import str2date, str2date_Bk
+# from utils.data_cvt import str2date, str2date_Bk
 
 
 def prepareFoursquareYear(year):
@@ -69,6 +69,21 @@ def prepareUserToTrajectory(dataset, time2date, prepareYear):
         pickle.dump(index2trajectory, file)
 
 
+def prepareUserToRecommend(dataset):
+    with open('../data/%s_user_re_i.pkl' % dataset, 'rb') as file:
+        index2recommend = pickle.load(file)
+    with open('../data/%s_user_ii.pkl'   % dataset, 'rb') as file:
+        user2index = pickle.load(file)
+    index2user = {index: user for user, index in user2index.items()}
+
+    user2recommend = dict()
+    for index, recommend in index2recommend.items():
+        user2recommend[index2user[index]] = recommend
+
+    with open('../data/%s_user_re.pkl' % dataset, 'wb') as file:
+        pickle.dump(user2recommend, file)
+
+
 class Trajectory(Dataset):
     def __init__(self, name):
         assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Brightkite_x')
@@ -99,6 +114,9 @@ if __name__ == '__main__':
     # prepareNodeToEmbedding('Foursquare_NYC', 'user')
     # prepareNodeToEmbedding('Brightkite_x', 'venue')
     # prepareNodeToEmbedding('Brightkite_x', 'user')
-    prepareUserToTrajectory('Foursquare_TKY', time2date = str2date, prepareYear = prepareFoursquareYear)
-    prepareUserToTrajectory('Foursquare_NYC', time2date = str2date, prepareYear = prepareFoursquareYear)
-    prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk, prepareYear = prepareBrightkiteYear)
+    # prepareUserToTrajectory('Foursquare_TKY', time2date = str2date, prepareYear = prepareFoursquareYear)
+    # prepareUserToTrajectory('Foursquare_NYC', time2date = str2date, prepareYear = prepareFoursquareYear)
+    # prepareUserToTrajectory('Brightkite_x', time2date = str2date_Bk, prepareYear = prepareBrightkiteYear)
+    prepareUserToRecommend('Foursquare_TKY')
+    prepareUserToRecommend('Foursquare_NYC')
+    prepareUserToRecommend('Brightkite_x')
