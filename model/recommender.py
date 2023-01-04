@@ -18,7 +18,7 @@ class TimeToEmbedding(nn.Module):
         return self.linear(inputs)
 
 
-class Recommender(nn.Module):
+class RNNRecommender(nn.Module):
     def __init__(self, vector_size = 64, criterion = 'MSELoss', dataset = 'Foursquare_TKY', device = 'cpu'):
         super().__init__()
         assert criterion in ('CrossEntropyLoss', 'MSELoss')
@@ -105,3 +105,11 @@ class Recommender(nn.Module):
             count = 0
 
         return loss, outputs, correct01, correct05, correct10, correct20, count
+
+
+class SimpleRecommender(nn.Module):
+    def __init__(self):
+        pass
+
+    def forward(self):
+        pass

@@ -9,11 +9,11 @@ from torch.utils.data import DataLoader
 
 from emb2coord import adjustlr
 from dataset import Trajectory
-from model import Recommender
+from model import RNNRecommender
 
 
 def build(dataset, device):
-    model = Recommender(dataset = dataset, device = device)
+    model = RNNRecommender(dataset = dataset, device = device)
     model.to(device)
 
     for module in model.modules():

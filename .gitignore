@@ -3,6 +3,8 @@
 /emb2coord/
 /recommender/
 /old_ckpt/
-/rnn.pptx
-/train.pptx
-/mao.png
+/figure/rnn.pptx
+/figure/network.pptx
+/figure/mao.png
+emb2coord.xlsx
+recommender.xlsx
