@@ -27,7 +27,8 @@ class RNNRecommender(nn.Module):
         super().__init__()
         assert criterion in ('CrossEntropyLoss', 'MSELoss')
         assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x',
-                           'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
+                           'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v',
+                           'Brightkite_x_no_u', 'Brightkite_x_no_v', 'Brightkite_x_no_u_no_v')
 
         with open('data/%s_venue_em.pkl' % dataset, 'rb') as file:
             venue_embeddings = pickle.load(file)
