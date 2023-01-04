@@ -209,10 +209,10 @@ def test(model, dataloader, device):
 if __name__ == '__main__':
     seed = 123
 
-    dataset = 'Foursquare_TKY'
+    # dataset = 'Foursquare_TKY'
     # dataset = 'Foursquare_NYC'
     # dataset = 'Foursquare_NYC_LCS'
-    # dataset = 'Brightkite_x'
+    dataset = 'Brightkite_x'
 
     batch_size = 1
     num_workers = 4
