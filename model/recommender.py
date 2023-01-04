@@ -3,8 +3,9 @@ from tqdm import tqdm
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
 
-from recommender import load
+from dataset import Trajectory
 
 
 class TimeToEmbedding(nn.Module):
@@ -164,6 +165,16 @@ def build(dataset, device):
     model = SimpleRecommender(dataset = dataset, device = device)
     model.to(device)
     return model
+
+
+def load(name, batch_size, num_workers, shuffle):
+    dataset = Trajectory(name)
+    print('Loaded %d trajectories' % len(dataset))
+
+    dataloader = DataLoader(dataset, batch_size = batch_size, num_workers = num_workers, shuffle = shuffle)
+    print('With batch size %3d, %4d iterations per epoch\n' % (batch_size, len(dataloader)))
+
+    return dataloader
 
 
 def test(model, dataloader,  # dataset,

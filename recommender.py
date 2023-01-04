@@ -98,8 +98,11 @@ if __name__ == '__main__':
 
     # dataset = 'Foursquare_TKY'
     # dataset = 'Foursquare_NYC'
-    dataset = 'Foursquare_NYC_LCS'
+    # dataset = 'Foursquare_NYC_LCS'
     # dataset = 'Brightkite_x'
+    dataset = 'Foursquare_TKY_no_u'
+    # dataset = 'Foursquare_TKY_no_v'
+    # dataset = 'Foursquare_TKY_no_u_no_v'
 
     batch_size = 1
     num_workers = 4
