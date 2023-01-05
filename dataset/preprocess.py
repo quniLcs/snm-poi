@@ -94,7 +94,7 @@ def compute_topk_user_dict(data_root,
         return dp[m][n]
     
     
-    dataset = FourSquare(data_root, type, load_usr=False, load_geo=False)
+    dataset = FourSquare(data_root, type, load_usr=False, load_geo=False, load_xy=False)
     
     user_id_list = dataset.user_id_list
     venue_id2idx, idx2venue_id = dataset.venue_id2idx, dataset.idx2venue_id
@@ -114,6 +114,9 @@ def compute_topk_user_dict(data_root,
         topk_close_user_dict[userId_i] = sorted(temp, key=lambda x: x[1], reverse=True)[1:top_k+1]
     
     save_path = os.path.join(data_root, "Foursquare_%s_topk_close_user.pkl" % (dataset.city))
+    if mode == "LCS":
+        save_path = os.path.join(data_root, "Foursquare_%s_topk_close_user_LCS.pkl" % (dataset.city))
+    
     with open(save_path, "wb") as f:
         pickle.dump(topk_close_user_dict, f)     
     
@@ -168,6 +171,6 @@ def compute_topk_venue_dict_for_Bk(data_root,
 if __name__ == '__main__':
     
     data_root = "../data"
-    compute_topk_venue_dict(data_root, type="NYC")
-    compute_topk_user_dict(data_root, mode="slide_window", type="NYC")
+    # compute_topk_venue_dict(data_root, type="NYC")
+    compute_topk_user_dict(data_root, mode="LCS", type="NYC")
     # compute_topk_venue_dict_for_Bk(data_root)

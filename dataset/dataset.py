@@ -29,7 +29,8 @@ class FourSquare():
                  type="TKY",
                  debug=False,
                  load_geo=True,
-                 load_usr=True):
+                 load_usr=True,
+                 load_xy=True):
         '''
         Args:
             root: The root of data dir, including dir "Foursquare".
@@ -45,6 +46,7 @@ class FourSquare():
         
         self.head = head
         self.city = type
+        self.dataset_type = "Foursquare"
         self.raw_data = raw_data
         self.n_records = n_records
         self.data_root = root
@@ -122,6 +124,14 @@ class FourSquare():
             with open(load_path, "rb") as f:
                 self.top_k_user_dict = pickle.load(f)   
                 
+        if load_xy:
+            load_path = os.path.join(root, "Foursquare_%s_user_xy.csv" % (self.city))
+            raw_user_xy = np.loadtxt(load_path, delimiter=',', skiprows=1, dtype=str)
+            user_xy = {}
+            for rec in raw_user_xy:
+                user_xy[rec[0]] = rec[1:3]
+            self.user_xy = user_xy
+                
         test = [len(_[0]) for _ in visited_dict.values()]
         
          
@@ -144,6 +154,7 @@ class FourSquare():
                     next_node = random.choice(self.traj_dict[node][0])
                     next_category = "venue"                    
                 else:
+                    print("Warning")
                     next_node = random.choice(self.top_k_user_dict[node])[0]
                     next_category = "user"
             else:
@@ -152,6 +163,7 @@ class FourSquare():
                     next_node = random.choice(self.visited_dict[node][0])
                     next_category = "user"
                 else:
+                    # print("Warning")
                     next_node = random.choice(self.top_k_venue_dict[node])
                     next_category = "venue"                    
             
@@ -197,7 +209,8 @@ class BrightKite():
     def __init__(self, 
                  root="../data",
                  debug=False,
-                 load_geo=True):
+                 load_geo=True,
+                 load_xy=True):
         '''
         Args: The same as FourSquare.
         '''
@@ -212,6 +225,8 @@ class BrightKite():
         
         self.raw_recs = raw_recs
         self.raw_edges = raw_edges
+        self.city = "x"
+        self.dataset_type = "Brightkite"
         
         # Get some valid information.
         user_id_list = sorted(list(set(raw_recs[:, 0].tolist())), key=lambda x: int(x))   
@@ -285,6 +300,14 @@ class BrightKite():
             user_from, user_to = edge
             top_k_user_dict[user_from].append(user_to)
         self.top_k_user_dict = top_k_user_dict
+        
+        if load_xy:
+            load_path = os.path.join(root, "Brightkite_%s_user_xy.csv" % (self.city))
+            raw_user_xy = np.loadtxt(load_path, delimiter=',', skiprows=1, dtype=str)        
+            user_xy = {}
+            for rec in raw_user_xy:
+                user_xy[rec[0]] = rec[1:3]
+            self.user_xy = user_xy                
                 
                 
     def simulate(self,

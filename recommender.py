@@ -73,7 +73,7 @@ class Trajectory(Dataset):
 
         with open('data/Foursquare_TKY_user_tr_i.pkl', 'rb') as file:
             self.dataset = pickle.load(file)
-        self.dataset = {index: self.dataset[index] for index in range(5)}
+        # self.dataset = {index: self.dataset[index] for index in range(5)}
 
     def __len__(self):
         return len(self.dataset)
