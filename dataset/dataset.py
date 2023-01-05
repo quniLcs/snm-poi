@@ -11,7 +11,7 @@
 #       userId -> str
 #       utcTimestamp -> str
 #       latitude -> str
-#       longtitude -> str
+#       longitude -> str
 #       venueId -> str
 
 import os
@@ -68,7 +68,7 @@ class FourSquare():
         traj_dict = {userId: [[], []] for userId in user_id_list}             # First list record id, second for timestamp.
         venue_dict = {venueId: None for venueId in venue_id_list}
         visited_dict = {venueId: [[], []] for venueId in venue_id_list}       # First list record id, second for timestamp.
-        last_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.
+        complete_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.
         
         print("Get trajectories!")
         
@@ -76,12 +76,12 @@ class FourSquare():
             
             userId, venueId, timezoneOffset, utcTimestamp = rec[0], rec[1], rec[6], rec[7]
             
-            last_traj_dict[userId][0].append(venueId)
-            last_traj_dict[userId][1].append(utcTimestamp)
+            complete_traj_dict[userId][0].append(venueId)
+            complete_traj_dict[userId][1].append(utcTimestamp)
             
-        assert min([len(_[0]) for _ in last_traj_dict.values()]) > 3
+        assert min([len(_[0]) for _ in complete_traj_dict.values()]) > 3
         
-        last_traj_dict = {k: [v[0][-3:], v[1][-3:]] for k, v in last_traj_dict.items()}
+        last_traj_dict = {k: [v[0][-3:], v[1][-3:]] for k, v in complete_traj_dict.items()}
         
         for rec in tqdm(raw_data, leave=False, ncols=80):
             
@@ -101,8 +101,8 @@ class FourSquare():
             traj_dict[userId][1].append(utcTimestamp)
             visited_dict[venueId][0].append(userId)
             visited_dict[venueId][1].append(utcTimestamp)
-            
-        
+
+        self.complete_traj_dict = complete_traj_dict
         self.last_traj_dict = last_traj_dict
         self.traj_dict = traj_dict
         self.visited_dict = visited_dict
@@ -243,7 +243,7 @@ class BrightKite():
         traj_dict = {userId: [[], []] for userId in user_id_list}             # First list record id, second for timestamp.
         venue_dict = {venueId: None for venueId in venue_id_list}
         visited_dict = {venueId: [[], []] for venueId in venue_id_list}       # First list record id, second for timestamp.
-        last_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.        
+        complete_traj_dict = {userId: [[], []] for userId in user_id_list}        # Same format as traj_dict, recording the last 3 poi of each traj.
         
         print("Get trajectories!")
         
@@ -251,13 +251,13 @@ class BrightKite():
             
             userId, venueId, utcTimestamp = rec[0], rec[-1], rec[1]
             
-            last_traj_dict[userId][0].append(venueId)
-            last_traj_dict[userId][1].append(utcTimestamp)
+            complete_traj_dict[userId][0].append(venueId)
+            complete_traj_dict[userId][1].append(utcTimestamp)
             
         # assert min([len(_[0]) for _ in last_traj_dict.values()]) > 3
         
         last_traj_dict = {k: [v[0][-3:] if len(v[0]) > 5 else [],\
-                              v[1][-3:] if len(v[0]) > 5 else []] for k, v in last_traj_dict.items()}
+                              v[1][-3:] if len(v[0]) > 5 else []] for k, v in complete_traj_dict.items()}
         
         for rec in tqdm(raw_recs, leave=False, ncols=80):
             
@@ -277,7 +277,8 @@ class BrightKite():
             traj_dict[userId][1].append(utcTimestamp)
             visited_dict[venueId][0].append(userId)
             visited_dict[venueId][1].append(utcTimestamp)
-        
+
+        self.complete_traj_dict = complete_traj_dict
         self.last_traj_dict = last_traj_dict
         self.traj_dict = traj_dict
         self.visited_dict = visited_dict

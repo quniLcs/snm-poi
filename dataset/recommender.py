@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from dataset import FourSquare, BrightKite
 # from utils.data_cvt import str2date, str2date_Bk
 
 
@@ -35,6 +36,27 @@ def prepareNodeToEmbedding(dataset, mode):
         pickle.dump(node2index, file)
     with open('../data/%s_%s_em.pkl' % (dataset, mode), 'wb') as file:
         pickle.dump(embeddings, file)
+
+
+def prepareFoursquareTrajectory(dataset):
+    assert dataset in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS',
+                       'Foursquare_TKY_no_u', 'Foursquare_TKY_no_v', 'Foursquare_TKY_no_u_no_v')
+
+    dataset = FourSquare()
+    user2trajectory = dataset.complete_traj_dict
+
+    with open('../data/%s_user_tr.pkl' % dataset, 'wb') as file:
+        pickle.dump(user2trajectory, file)
+
+
+def prepareBrightKiteTrajectory(dataset):
+    assert dataset in ('Brightkite_x', 'Brightkite_x_no_u', 'Brightkite_x_no_v', 'Brightkite_x_no_u_no_v')
+
+    dataset = BrightKite()
+    user2trajectory = dataset.complete_traj_dict
+
+    with open('../data/%s_user_tr.pkl' % dataset, 'wb') as file:
+        pickle.dump(user2trajectory, file)
 
 
 def prepareUserToTrajectory(dataset, time2date, prepareYear):

@@ -104,6 +104,7 @@ class EmbeddingAndCoordinate(Dataset):
         """
         assert name in ('Foursquare_TKY', 'Foursquare_NYC', 'Foursquare_NYC_LCS', 'Brightkite_x')
         assert mode in ('venue', 'user')
+
         with open('data/%s_%s_wv.pkl' % (name, mode), 'rb') as file:
             embedding = pickle.load(file)
 
