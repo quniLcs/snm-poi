@@ -1,5 +1,10 @@
 /data/
-/visualize/
 /log/
+/emb2coord/
+/recommender/
 /old_ckpt/
+/figure/rnn.pptx
+/figure/network.pptx
+/figure/mao.png
 emb2coord.xlsx
+recommender.xlsx
